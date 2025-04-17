@@ -1,27 +1,46 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CelebrityGrid } from "@/components/celebrity-grid";
 import { ProcessSteps } from "@/components/process-steps";
+import { useJob } from "@/lib/job-context";
+import { Celebrity } from "@/lib/api";
 
 export default function Home() {
-  const [selectedCelebrity, setSelectedCelebrity] = useState<{
-    id: string;
-    name: string;
-    image: string;
-  } | null>(null);
+  const [selectedCelebrity, setSelectedCelebrity] = useState<Celebrity | null>(
+    null
+  );
   const [topic, setTopic] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { clearJob, createNewJob } = useJob();
+  const router = useRouter();
 
-  const handleGenerate = () => {
-    if (!selectedCelebrity || !topic) return;
-    // In a real app, this would call an API to generate the video
-    console.log("Generating with:", { celebrity: selectedCelebrity, topic });
+  const handleGenerate = async () => {
+    if (!selectedCelebrity || !topic || isSubmitting) return;
+
+    // Set submitting state to prevent multiple submissions
+    setIsSubmitting(true);
+
+    try {
+      // Clear any existing job first
+      clearJob();
+
+      // Create the job and get the job ID
+      const newJob = await createNewJob(topic, selectedCelebrity.id);
+
+      // Navigate to the results page with the job ID in the path
+      router.push(`/results/${newJob.job_id}`);
+    } catch (error) {
+      console.error("Error creating job:", error);
+      setIsSubmitting(false);
+    }
   };
 
-  // Process steps with icons (would use real icons in a production app)
+  // Process steps with icons
   const steps = [
     {
       title: "Select a celebrity & topic",
@@ -81,9 +100,9 @@ export default function Home() {
                 size="lg"
                 className="w-full"
                 onClick={handleGenerate}
-                disabled={!selectedCelebrity || !topic}
+                disabled={!selectedCelebrity || !topic || isSubmitting}
               >
-                Generate Explanation
+                {isSubmitting ? "Creating..." : "Generate Explanation"}
               </Button>
 
               {/* Selected summary */}
@@ -112,7 +131,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="container mx-auto py-6 border-t border-border">
         <div className="flex justify-center items-center text-sm text-muted-foreground">
-          <p>© 2023 Celebrity Explainer Generator</p>
+          <p>© {new Date().getFullYear()} Celebrity Explainer Generator</p>
         </div>
       </footer>
     </div>

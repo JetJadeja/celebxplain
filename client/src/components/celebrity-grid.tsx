@@ -1,34 +1,63 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-
-type Celebrity = {
-  id: string;
-  name: string;
-  image: string;
-};
-
-// Sample celebrity data - in a real app, this would come from an API
-const defaultCelebrities: Celebrity[] = [
-  { id: "1", name: "Morgan Freeman", image: "/placeholder-avatar.svg" },
-  { id: "2", name: "Taylor Swift", image: "/placeholder-avatar.svg" },
-  { id: "3", name: "Neil deGrasse Tyson", image: "/placeholder-avatar.svg" },
-  { id: "4", name: "Oprah Winfrey", image: "/placeholder-avatar.svg" },
-  { id: "5", name: "Elon Musk", image: "/placeholder-avatar.svg" },
-  { id: "6", name: "Beyoncé", image: "/placeholder-avatar.svg" },
-];
+import { fetchPersonas, type Celebrity } from "@/lib/api";
 
 interface CelebrityGridProps {
-  celebrities?: Celebrity[];
   onSelect: (celebrity: Celebrity) => void;
   selectedId?: string;
 }
 
-export function CelebrityGrid({
-  celebrities = defaultCelebrities,
-  onSelect,
-  selectedId,
-}: CelebrityGridProps) {
+export function CelebrityGrid({ onSelect, selectedId }: CelebrityGridProps) {
+  const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCelebrities = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchPersonas();
+        setCelebrities(data);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load celebrities"
+        );
+        console.error("Error loading celebrities:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCelebrities();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, index) => (
+          <Card key={index} className="animate-pulse">
+            <CardContent className="p-4 flex flex-col items-center">
+              <div className="w-24 h-24 rounded-full bg-primary/20 mb-2" />
+              <div className="h-4 w-24 bg-primary/20 rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 border border-destructive/20 bg-destructive/10 rounded-md text-destructive">
+        <p>Failed to load celebrities: {error}</p>
+        <p className="text-sm mt-2">Please try refreshing the page.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       {celebrities.map((celebrity) => (
