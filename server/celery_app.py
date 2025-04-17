@@ -1,4 +1,9 @@
 from celery import Celery
+import sys
+import os
+
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Create the Celery app
 celery_app = Celery(
@@ -28,7 +33,7 @@ celery_app.conf.update(
 )
 
 # Auto-discover tasks in the server/tasks directory
-celery_app.autodiscover_tasks(['server.tasks'])
+celery_app.autodiscover_tasks(['tasks'])
 
 # This allows you to call tasks directly when in the same process
 # (development convenience)
