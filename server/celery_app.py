@@ -25,20 +25,10 @@ celery_app.conf.update(
     # Retry settings
     task_default_retry_delay=60,  # Default retry delay (seconds)
     task_max_retries=3,  # Maximum number of retries per task
-    
-    # Task routes for resource allocation
-    task_routes={
-        'tasks.create_celebrity_video_task': {'queue': 'video_processing'},
-        'tasks.create_visuals_task': {'queue': 'video_processing'},
-        'tasks.assemble_video_task': {'queue': 'video_processing'},
-        'tasks.generate_script_task': {'queue': 'api_calls'},
-        'tasks.generate_speech_task': {'queue': 'api_calls'},
-        'tasks.process_video_job': {'queue': 'default'},
-    }
 )
 
-# Auto-discover tasks in the tasks directory
-celery_app.autodiscover_tasks(['tasks'])
+# Auto-discover tasks in the server/tasks directory
+celery_app.autodiscover_tasks(['server.tasks'])
 
 # This allows you to call tasks directly when in the same process
 # (development convenience)
