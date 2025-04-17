@@ -12,18 +12,18 @@ from services.video_service import assemble_final_video
 # Track ongoing job processes
 running_jobs = {}
 
-def create_job(celeb_id, query):
+def create_job(persona_id, query):
     """Create a new job and start processing in background thread"""
     # Generate unique job identifier
     job_id = str(uuid.uuid4())
     
     # Record in database
-    db_create_job(job_id, celeb_id, query)
+    db_create_job(job_id, persona_id, query)
     
     # Launch background processing
     job_thread = threading.Thread(
         target=_process_job,
-        args=(job_id, celeb_id, query)
+        args=(job_id, persona_id, query)
     )
     job_thread.daemon = True
     job_thread.start()
@@ -48,17 +48,17 @@ def get_job_info(job_id):
         "status_updates": updates
     }
 
-def _process_job(job_id, celeb_id, query):
+def _process_job(job_id, persona_id, query):
     """Execute all processing steps for celebrity explanation video"""
     try:
         # Step 1: Generate explanation content
         update_job_status(job_id, "generating_explanation", "Creating explanation script...")
-        explanation = generate_explanation(celeb_id, query)
+        explanation = generate_explanation(persona_id, query)
         update_job_status(job_id, "explanation_ready", "Explanation script completed")
         
         # Step 2: Text-to-speech conversion
         update_job_status(job_id, "creating_audio", "Converting to speech...")
-        speech_file, word_timings = generate_speech(celeb_id, explanation)
+        speech_file, word_timings = generate_speech(persona_id, explanation)
         update_job_status(job_id, "audio_ready", "Voice generation complete")
         
         # Create job output directory
@@ -72,7 +72,7 @@ def _process_job(job_id, celeb_id, query):
             # Launch both tasks simultaneously
             celeb_task = executor.submit(
                 create_celebrity_video,
-                celeb_id,
+                persona_id,
                 speech_file
             )
             

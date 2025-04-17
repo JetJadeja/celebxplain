@@ -1,6 +1,6 @@
 import os
 
-def generate_speech(celeb_id, script):
+def generate_speech(persona_id, script):
     """Generate speech audio from the script in the celebrity's voice"""
     # TODO: Implement actual TTS API call
     
@@ -11,7 +11,7 @@ def generate_speech(celeb_id, script):
     word_timings = [
         {"word": "Hello", "start": 0.0, "end": 0.5},
         {"word": "I'm", "start": 0.6, "end": 0.8},
-        {"word": celeb_id, "start": 0.9, "end": 1.5},
+        {"word": persona_id, "start": 0.9, "end": 1.5},
         {"word": "Let", "start": 1.7, "end": 1.9},
         {"word": "me", "start": 2.0, "end": 2.2},
         {"word": "tell", "start": 2.3, "end": 2.5},

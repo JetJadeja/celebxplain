@@ -1,7 +1,7 @@
 import os
 import time
 
-def create_celebrity_video(celeb_id, audio_file):
+def create_celebrity_video(persona_id, audio_file):
     """Create a video of the celebrity lip-syncing to the audio"""
     # TODO: Implement Sieve lipsync API
     

@@ -23,7 +23,7 @@ def init_db():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS jobs (
         id TEXT PRIMARY KEY,
-        celeb_id TEXT NOT NULL,
+        persona_id TEXT NOT NULL,
         query TEXT NOT NULL,
         status TEXT NOT NULL,
         created_at TIMESTAMP NOT NULL,
@@ -51,7 +51,7 @@ def init_db():
     print("Database initialized successfully!")
 
 # Job-related database functions
-def create_job(job_id, celebrity, topic):
+def create_job(job_id, persona_id, query):
     """Create a new job in the database"""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -59,14 +59,14 @@ def create_job(job_id, celebrity, topic):
     now = datetime.datetime.now().isoformat()
     
     cursor.execute(
-        'INSERT INTO jobs (id, celebrity, topic, status, created_at) VALUES (?, ?, ?, ?, ?)',
-        (job_id, celebrity, topic, 'created', now)
+        'INSERT INTO jobs (id, persona_id, query, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        (job_id, persona_id, query, 'created', now)
     )
     
     # Add initial update
     cursor.execute(
         'INSERT INTO job_updates (job_id, status, message, created_at) VALUES (?, ?, ?, ?)',
-        (job_id, 'created', f'Job created for {celebrity} explaining {topic}', now)
+        (job_id, 'created', f'Job created for persona {persona_id} explaining {query}', now)
     )
     
     conn.commit()

@@ -10,15 +10,15 @@ def create_job_route():
     data = request.get_json()
     
     # Validate request data
-    if not data or 'query' not in data or 'celeb_id' not in data:
-        return jsonify({'error': 'Missing required fields: query and celeb_id'}), 400
+    if not data or 'query' not in data or 'persona' not in data:
+        return jsonify({'error': 'Missing required fields: query and persona'}), 400
     
     # Extract parameters
-    celeb_id = data['celeb_id']
+    persona_id = data['persona']
     query = data['query']
     
     # Create job and get job ID
-    job_id = create_job(celeb_id, query)
+    job_id = create_job(persona_id, query)
     
     # Return the job ID
     return jsonify({
