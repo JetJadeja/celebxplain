@@ -1,0 +1,28 @@
+{
+  "personas": [
+    {
+      "id": "trump",
+      "name": "Donald Trump",
+      "tts_voice_link": "",
+      "icon_url": "/static/icons/trump.png",
+      "video_path": "data/videos/trump.mp4",
+      "style_prompt": "Speak in a rambling style with frequent superlatives like 'tremendous' and 'huge'"
+    },
+    {
+      "id": "biden",
+      "name": "Joe Biden",
+      "tts_voice_link": "",
+      "icon_url": "/static/icons/biden.png",
+      "video_path": "data/videos/biden.mp4",
+      "style_prompt": ""
+    },
+    {
+      "id": "kanye",
+      "name": "Kanye West",
+      "tts_voice_link": "",
+      "icon_url": "/static/icons/kanye.png",
+      "video_path": "data/videos/kanye.mp4",
+      "style_prompt": ""
+    }
+  ]
+}
