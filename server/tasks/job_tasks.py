@@ -32,7 +32,7 @@ def process_job(job_id, persona_id, query):
 
         print("Generating speech...")
         
-        speech_file = generate_speech(job_id, persona_id, explanation)
+        speech_file, transcription = generate_speech(job_id, persona_id, explanation)
         update_job_status(job_id, "audio_ready", "Voice generation complete")
         
         # # Create job output directory
@@ -78,7 +78,7 @@ def process_job(job_id, persona_id, query):
         #     result_url=result_path
         # )
 
-        return explanation
+        return speech_file, transcription
         
     except Exception as e:
         # Handle any failures
