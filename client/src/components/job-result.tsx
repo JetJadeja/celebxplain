@@ -24,6 +24,48 @@ export function JobResult({ onReset }: JobResultProps) {
   // Get job ID from route params or job objects
   const jobId = (params.jobId as string) || jobStatus?.job_id || job?.job_id;
 
+  // Extract updates from job object safely
+  const jobUpdates = job?.updates || [];
+
+  // Helper function to render updates timeline
+  const UpdatesTimeline = React.memo(
+    ({
+      updates,
+      title,
+      borderColor = "border-primary/20",
+    }: {
+      updates: any[];
+      title: string;
+      borderColor?: string;
+    }) => {
+      if (updates.length === 0) return null;
+
+      return (
+        <div className={`w-full mt-6 border rounded-md p-4 ${borderColor}`}>
+          <h3 className="font-medium mb-2">{title}</h3>
+          <div className="space-y-3">
+            {updates.map((update, index) => (
+              <div
+                key={update.id || index}
+                className={`border-l-2 pl-3 py-1 ${borderColor}`}
+              >
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium capitalize">
+                    {update.status}
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {new Date(update.created_at).toLocaleTimeString()}
+                  </span>
+                </div>
+                <p className="text-sm">{update.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+  );
+
   // Helper function to display job ID
   const JobIdDisplay = ({ id }: { id?: string }) => {
     if (!id) return null;
@@ -79,7 +121,7 @@ export function JobResult({ onReset }: JobResultProps) {
   }
 
   // If the job failed
-  if (jobStatus?.status === "failed") {
+  if (jobStatus?.status === "failed" || jobStatus?.status === "error") {
     return (
       <Card className="w-full max-w-2xl mx-auto border-destructive/50">
         <CardHeader>
@@ -93,6 +135,12 @@ export function JobResult({ onReset }: JobResultProps) {
           <p className="text-destructive">
             {jobStatus.error || "Unknown error occurred"}
           </p>
+
+          <UpdatesTimeline
+            updates={jobUpdates}
+            title="Error Details"
+            borderColor="border-destructive/30"
+          />
         </CardContent>
         <CardFooter>
           <Button onClick={onReset} variant="outline" className="w-full">
@@ -121,6 +169,12 @@ export function JobResult({ onReset }: JobResultProps) {
           <div className="bg-primary/5 p-4 rounded-md">
             <p className="whitespace-pre-line">{jobStatus.result}</p>
           </div>
+
+          <UpdatesTimeline
+            updates={jobUpdates}
+            title="Processing Timeline"
+            borderColor="border-green-500/50"
+          />
         </CardContent>
         <CardFooter className="flex gap-2">
           <Button onClick={onReset} variant="outline" className="flex-1">
@@ -149,6 +203,8 @@ export function JobResult({ onReset }: JobResultProps) {
         <p className="text-muted-foreground text-center">
           Your request is being processed. This may take a minute.
         </p>
+
+        <UpdatesTimeline updates={jobUpdates} title="Job Updates" />
       </CardContent>
     </Card>
   );

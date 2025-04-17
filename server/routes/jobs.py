@@ -34,7 +34,13 @@ def get_job_status_route(job_id):
     if not job_data:
         return jsonify({'error': 'Job not found'}), 404
     
-    return jsonify(job_data)
+    # Restructure the response to match what the client expects
+    response = {
+        'job': job_data['job_details'],
+        'updates': job_data['status_updates']
+    }
+    
+    return jsonify(response)
 
 @jobs_bp.route('/api/jobs/<job_id>/video', methods=['GET'])
 def get_video_route(job_id):

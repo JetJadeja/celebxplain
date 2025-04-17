@@ -17,15 +17,8 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
             print(f"Warning: Base video not found for persona {persona_id}, using placeholder")
             return os.path.join('server', 'data', 'placeholder_celebrity.mp4')
         
-        # Create output directory - use same structure as TTS service
-        output_dir = os.path.dirname(audio_file)
-        
         # Output video path - use fixed filename
         output_video = os.path.join(output_dir, "lip_synced_video.mp4")
-        
-        print(f"Creating lip-sync video for {persona['name']} using audio: {audio_file}")
-        print(f"Base video: {base_video_path}")
-        print(f"Output will be saved to: {output_video}")
         
         # Create Sieve file objects
         video_file = sieve.File(path=base_video_path)

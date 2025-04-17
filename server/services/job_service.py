@@ -25,8 +25,11 @@ def get_job_info(job_id):
     if not job_data:
         return None
     
+    
     # Collect all status updates
     updates = get_job_updates(job_id)
+    
+    print(updates)
     
     return {
         "job_details": job_data,

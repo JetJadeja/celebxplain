@@ -28,18 +28,22 @@ def process_job(job_id, persona_id, query):
 
         # Step 1: Generate explanation content
         explanation = generate_explanation(persona_id, query)
+        update_job_status(job_id, "processing", "Generated explanation content")
         
         # Step 2: Text-to-speech conversion
         speech_file, transcription = generate_speech(job_id, persona_id, explanation, results_dir)
+        update_job_status(job_id, "processing", "Generated speech")
 
         # Steps 3 & 4: Parallel processing for efficiency
+        update_job_status(job_id, "processing", "Generating visuals content")
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             # Launch both tasks simultaneously
-            celeb_task = executor.submit(
-                create_celebrity_video,
-                persona_id,
-                speech_file
-            )
+            # celeb_task = executor.submit(
+            #     create_celebrity_video,
+            #     persona_id,
+            #     speech_file,
+            #     results_dir
+            # )
             
             visuals_task = executor.submit(
                 create_explanatory_visuals,
@@ -47,15 +51,17 @@ def process_job(job_id, persona_id, query):
             )
             
             # Wait for both to complete
-            celeb_video = celeb_task.result()
+            # celeb_video = celeb_task.result()
             visual_elements = visuals_task.result()
+            update_job_status(job_id, "processing", "Generated visuals")
         
         # Step 5: Final video production
+        update_job_status(job_id, "processing", "Assembling final video")
         output_path = assemble_final_video(celeb_video, visual_elements, results_dir)
         
         # Set result access path
         result_path = f"/api/jobs/{job_id}/video"
-
+        update_job_status(job_id, "completed", "Video generated successfully")
         return {
             "speech_file": speech_file,
             "transcription": transcription,

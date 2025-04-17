@@ -6,8 +6,16 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useRef,
+  useCallback,
 } from "react";
-import { JobResponse, JobStatusResponse, createJob, getJobStatus } from "./api";
+import {
+  JobResponse,
+  JobStatusResponse,
+  createJob,
+  getJobStatus,
+  getJobWithUpdates,
+} from "./api";
 
 // Define the context state type
 interface JobContextState {
@@ -17,7 +25,7 @@ interface JobContextState {
   error: string | null;
   createNewJob: (query: string, personaId: string) => Promise<JobResponse>;
   clearJob: () => void;
-  fetchJobById: (jobId: string) => Promise<void>;
+  fetchJobById: (jobId: string) => Promise<JobStatusResponse>;
 }
 
 // Create context with default values
@@ -30,7 +38,9 @@ const JobContext = createContext<JobContextState>({
     throw new Error("JobContext not initialized");
   },
   clearJob: () => {},
-  fetchJobById: async () => {},
+  fetchJobById: async () => {
+    throw new Error("JobContext not initialized");
+  },
 });
 
 // Hook for using the job context
@@ -41,145 +51,110 @@ interface JobProviderProps {
 }
 
 export const JobProvider = ({ children }: JobProviderProps) => {
+  // Use state for values that need to trigger re-renders
   const [job, setJob] = useState<JobResponse | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
-    null
-  );
 
-  // Clear any existing polling when component unmounts
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
-
-  // Function to poll job status
-  const pollJobStatus = async (jobId: string) => {
-    try {
-      console.log("Polling job status for:", jobId);
-      const status = await getJobStatus(jobId);
-      console.log("Received job status:", status);
-
-      // Ensure job_id is set if it's missing in the response
-      if (!status.job_id) {
-        status.job_id = jobId;
-      }
-
-      setJobStatus(status);
-
-      // If job is complete or failed, stop polling
-      if (status.status === "completed" || status.status === "failed") {
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          setPollingInterval(null);
-        }
-      }
-    } catch (err) {
-      console.error("Error polling job status:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch job status"
-      );
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
-    }
-  };
+  // Use refs for tracking last fetch time to prevent too many fetches
+  const lastFetchTime = useRef<{ [jobId: string]: number }>({});
+  const isFetching = useRef<{ [jobId: string]: boolean }>({});
 
   // Create a new job
-  const createNewJob = async (
-    query: string,
-    personaId: string
-  ): Promise<JobResponse> => {
-    // Clear any previous job state
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
+  const createNewJob = useCallback(
+    async (query: string, personaId: string): Promise<JobResponse> => {
+      setLoading(true);
+      setError(null);
+      setJob(null);
+      setJobStatus(null);
 
-    setLoading(true);
-    setError(null);
-    setJob(null);
-    setJobStatus(null);
+      try {
+        const newJob = await createJob(query, personaId);
+        setJob(newJob);
+        return newJob;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create job";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
-    try {
-      console.log("Creating job with:", { query, persona: personaId });
-      const newJob = await createJob(query, personaId);
-      console.log("Created job:", newJob);
-
-      // Ensure we have a job_id, fallback to a generated one if needed
-      if (!newJob.job_id) {
-        console.warn("Job ID missing in response, creating fallback ID");
-        newJob.job_id = `fallback-${Date.now()}`;
+  // Fetch job by ID - completely simplified version
+  const fetchJobById = useCallback(
+    async (jobId: string): Promise<JobStatusResponse> => {
+      // Prevent concurrent fetches for the same job ID
+      if (isFetching.current[jobId]) {
+        return Promise.resolve(
+          jobStatus ||
+            ({
+              job_id: jobId,
+              status: "pending",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            } as JobStatusResponse)
+        );
       }
 
-      setJob(newJob);
+      // Check if we fetched recently (within 3 seconds)
+      const now = Date.now();
+      const lastFetch = lastFetchTime.current[jobId] || 0;
 
-      // Return the job response so the caller can use it
-      return newJob;
-    } catch (err) {
-      console.error("Error creating job:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create job";
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (now - lastFetch < 3000) {
+        return Promise.resolve(
+          jobStatus ||
+            ({
+              job_id: jobId,
+              status: "pending",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            } as JobStatusResponse)
+        );
+      }
 
-  // Fetch job by ID
-  const fetchJobById = async (jobId: string) => {
-    // Clear any previous job state
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
+      // Mark that we're fetching
+      isFetching.current[jobId] = true;
+      setLoading(true);
 
-    setLoading(true);
-    setError(null);
+      try {
+        // Update last fetch time
+        lastFetchTime.current[jobId] = now;
 
-    try {
-      // Set a minimal job object first
-      const minimalJob: JobResponse = {
-        job_id: jobId,
-        status: "pending",
-        created_at: new Date().toISOString(),
-      };
+        // Get job status
+        const status = await getJobStatus(jobId);
 
-      setJob(minimalJob);
+        // Get full job if needed
+        const fullJob = await getJobWithUpdates(jobId);
 
-      // Start polling for job status
-      await pollJobStatus(jobId);
+        // Update state only once with both pieces of data
+        setJobStatus(status);
+        setJob(fullJob);
 
-      const interval = setInterval(() => {
-        pollJobStatus(jobId);
-      }, 2000); // Poll every 2 seconds
-
-      setPollingInterval(interval);
-    } catch (err) {
-      console.error("Error fetching job:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch job");
-    } finally {
-      setLoading(false);
-    }
-  };
+        return status;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch job";
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+        isFetching.current[jobId] = false;
+      }
+    },
+    [jobStatus]
+  );
 
   // Clear current job
-  const clearJob = () => {
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
+  const clearJob = useCallback(() => {
     setJob(null);
     setJobStatus(null);
     setError(null);
-  };
+  }, []);
 
   // Context value
   const value = {

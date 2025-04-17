@@ -11,15 +11,30 @@ export type JobRequest = {
   persona: string;
 };
 
+export interface JobUpdate {
+  id: number;
+  job_id: string;
+  status: string;
+  message: string;
+  created_at: string;
+}
+
 export type JobResponse = {
   job_id: string;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed" | "error";
   created_at: string;
+  completed_at?: string | null;
+  error?: string;
+  result_url?: string | null;
+  persona_id?: string;
+  query?: string;
+  id?: string;
+  updates?: JobUpdate[];
 };
 
 export type JobStatusResponse = {
   job_id: string;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed" | "error";
   result?: string;
   error?: string;
   created_at: string;
@@ -102,6 +117,26 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
     return response.json();
   } catch (error) {
     console.error("Error fetching job status:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches the complete job with all updates
+ */
+export async function getJobWithUpdates(jobId: string): Promise<JobResponse> {
+  try {
+    // The API might not have a separate with-updates endpoint,
+    // so let's just use the regular endpoint which should include updates
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch job with updates: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching job with updates:", error);
     throw error;
   }
 }
