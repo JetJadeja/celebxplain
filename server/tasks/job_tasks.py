@@ -29,53 +29,56 @@ def process_job(job_id, persona_id, query):
         
         # Step 2: Text-to-speech conversion
         update_job_status(job_id, "creating_audio", "Converting to speech...")
-        speech_file, word_timings = generate_speech(persona_id, explanation)
+
+        print("Generating speech...")
+        
+        speech_file = generate_speech(job_id, persona_id, explanation)
         update_job_status(job_id, "audio_ready", "Voice generation complete")
         
-        # Create job output directory
-        results_dir = os.path.join('server', 'data', 'results', job_id)
-        os.makedirs(results_dir, exist_ok=True)
+        # # Create job output directory
+        # results_dir = os.path.join('server', 'data', 'results', job_id)
+        # os.makedirs(results_dir, exist_ok=True)
         
-        # Steps 3 & 4: Parallel processing for efficiency
-        update_job_status(job_id, "creating_media", "Generating video and visuals...")
+        # # Steps 3 & 4: Parallel processing for efficiency
+        # update_job_status(job_id, "creating_media", "Generating video and visuals...")
         
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            # Launch both tasks simultaneously
-            celeb_task = executor.submit(
-                create_celebrity_video,
-                persona_id,
-                speech_file
-            )
+        # with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        #     # Launch both tasks simultaneously
+        #     celeb_task = executor.submit(
+        #         create_celebrity_video,
+        #         persona_id,
+        #         speech_file
+        #     )
             
-            visuals_task = executor.submit(
-                create_explanatory_visuals,
-                query,
-                word_timings
-            )
+        #     visuals_task = executor.submit(
+        #         create_explanatory_visuals,
+        #         query,
+        #         word_timings
+        #     )
             
-            # Wait for both to complete
-            celeb_video = celeb_task.result()
-            update_job_status(job_id, "celeb_video_ready", "Celebrity video created")
+        #     # Wait for both to complete
+        #     celeb_video = celeb_task.result()
+        #     update_job_status(job_id, "celeb_video_ready", "Celebrity video created")
             
-            visual_elements = visuals_task.result()
-            update_job_status(job_id, "visuals_ready", "Supporting visuals created")
+        #     visual_elements = visuals_task.result()
+        #     update_job_status(job_id, "visuals_ready", "Supporting visuals created")
         
-        # Step 5: Final video production
-        update_job_status(job_id, "compositing", "Creating final video...")
-        output_path = assemble_final_video(celeb_video, visual_elements, results_dir)
+        # # Step 5: Final video production
+        # update_job_status(job_id, "compositing", "Creating final video...")
+        # output_path = assemble_final_video(celeb_video, visual_elements, results_dir)
         
-        # Set result access path
-        result_path = f"/api/jobs/{job_id}/video"
+        # # Set result access path
+        # result_path = f"/api/jobs/{job_id}/video"
         
-        # Mark job complete
-        update_job_status(
-            job_id, 
-            "completed", 
-            "Celebrity explanation video ready!",
-            result_url=result_path
-        )
-        
-        return output_path
+        # # Mark job complete
+        # update_job_status(
+        #     job_id, 
+        #     "completed", 
+        #     "Celebrity explanation video ready!",
+        #     result_url=result_path
+        # )
+
+        return explanation
         
     except Exception as e:
         # Handle any failures
