@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import json
 import os
 
@@ -14,13 +14,21 @@ def get_personas():
     with open(personas_file, 'r') as f:
         personas_data = json.load(f)
     
-    # Filter personas to only include id, name, and icon_url
+    # Get the base URL from request
+    base_url = request.host_url.rstrip('/')
+    
+    # Filter personas to only include id, name, and icon_url with full URLs
     filtered_personas = []
     for persona in personas_data['personas']:
+        # Convert relative path to absolute URL
+        icon_url = persona['icon_url']
+        if icon_url.startswith('/'):
+            icon_url = f"{base_url}{icon_url}"
+            
         filtered_personas.append({
             'id': persona['id'],
             'name': persona['name'],
-            'icon_url': persona['icon_url']
+            'icon_url': icon_url
         })
     
     return jsonify(filtered_personas), 200

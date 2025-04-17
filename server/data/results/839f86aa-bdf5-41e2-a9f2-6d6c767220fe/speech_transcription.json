@@ -1,0 +1,2037 @@
+[
+  {
+    "text": "Ladies and gentlemen, today I urge you to ponder a vital issue, diversity, equity, and inclusion, or DEI,  and the complexities that emerge from its implementation.  At its core, DEI strives to create a world where every individual feels valued,",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 0.06,
+        "end": 6.46,
+        "text": " Ladies and gentlemen, today I urge you to ponder a vital issue, diversity, equity, and inclusion, or DEI,",
+        "words": [
+          {
+            "start": 0.06,
+            "end": 0.18,
+            "confidence": 0.91357421875,
+            "word": " Ladies"
+          },
+          {
+            "start": 0.18,
+            "end": 0.34,
+            "confidence": 0.9931640625,
+            "word": " and"
+          },
+          {
+            "start": 0.34,
+            "end": 0.6,
+            "confidence": 0.8291015625,
+            "word": " gentlemen,"
+          },
+          {
+            "start": 1.12,
+            "end": 1.3,
+            "confidence": 0.92822265625,
+            "word": " today"
+          },
+          {
+            "start": 1.3,
+            "end": 1.5,
+            "confidence": 0.92138671875,
+            "word": " I"
+          },
+          {
+            "start": 1.5,
+            "end": 1.8,
+            "confidence": 0.9951171875,
+            "word": " urge"
+          },
+          {
+            "start": 1.8,
+            "end": 1.9,
+            "confidence": 0.99853515625,
+            "word": " you"
+          },
+          {
+            "start": 1.9,
+            "end": 2.06,
+            "confidence": 0.9951171875,
+            "word": " to"
+          },
+          {
+            "start": 2.14,
+            "end": 2.42,
+            "confidence": 0.996337890625,
+            "word": " ponder"
+          },
+          {
+            "start": 2.42,
+            "end": 2.62,
+            "confidence": 0.99365234375,
+            "word": " a"
+          },
+          {
+            "start": 2.62,
+            "end": 2.86,
+            "confidence": 0.99853515625,
+            "word": " vital"
+          },
+          {
+            "start": 2.86,
+            "end": 3.24,
+            "confidence": 0.99755859375,
+            "word": " issue,"
+          },
+          {
+            "start": 3.64,
+            "end": 4.1,
+            "confidence": 0.6767578125,
+            "word": " diversity,"
+          },
+          {
+            "start": 4.36,
+            "end": 4.7,
+            "confidence": 0.9970703125,
+            "word": " equity,"
+          },
+          {
+            "start": 4.86,
+            "end": 4.92,
+            "confidence": 0.99072265625,
+            "word": " and"
+          },
+          {
+            "start": 4.92,
+            "end": 5.38,
+            "confidence": 0.998046875,
+            "word": " inclusion,"
+          },
+          {
+            "start": 5.72,
+            "end": 5.86,
+            "confidence": 0.994140625,
+            "word": " or"
+          },
+          {
+            "start": 5.86,
+            "end": 6.46,
+            "confidence": 0.994140625,
+            "word": " DEI,"
+          }
+        ]
+      },
+      {
+        "start": 7.08,
+        "end": 9.52,
+        "text": " and the complexities that emerge from its implementation.",
+        "words": [
+          {
+            "start": 7.08,
+            "end": 7.26,
+            "confidence": 0.99609375,
+            "word": " and"
+          },
+          {
+            "start": 7.26,
+            "end": 7.42,
+            "confidence": 0.9990234375,
+            "word": " the"
+          },
+          {
+            "start": 7.42,
+            "end": 7.94,
+            "confidence": 0.99658203125,
+            "word": " complexities"
+          },
+          {
+            "start": 7.94,
+            "end": 8.26,
+            "confidence": 0.998046875,
+            "word": " that"
+          },
+          {
+            "start": 8.26,
+            "end": 8.58,
+            "confidence": 0.9208984375,
+            "word": " emerge"
+          },
+          {
+            "start": 8.58,
+            "end": 8.8,
+            "confidence": 0.99951171875,
+            "word": " from"
+          },
+          {
+            "start": 8.8,
+            "end": 8.94,
+            "confidence": 0.9755859375,
+            "word": " its"
+          },
+          {
+            "start": 8.94,
+            "end": 9.52,
+            "confidence": 0.9990234375,
+            "word": " implementation."
+          }
+        ]
+      },
+      {
+        "start": 10.3,
+        "end": 14.9,
+        "text": " At its core, DEI strives to create a world where every individual feels valued,",
+        "words": [
+          {
+            "start": 10.3,
+            "end": 10.42,
+            "confidence": 0.99853515625,
+            "word": " At"
+          },
+          {
+            "start": 10.42,
+            "end": 10.54,
+            "confidence": 0.98095703125,
+            "word": " its"
+          },
+          {
+            "start": 10.54,
+            "end": 10.9,
+            "confidence": 0.998046875,
+            "word": " core,"
+          },
+          {
+            "start": 11.12,
+            "end": 11.52,
+            "confidence": 0.99658203125,
+            "word": " DEI"
+          },
+          {
+            "start": 11.52,
+            "end": 12.0,
+            "confidence": 0.99560546875,
+            "word": " strives"
+          },
+          {
+            "start": 12.0,
+            "end": 12.12,
+            "confidence": 0.99951171875,
+            "word": " to"
+          },
+          {
+            "start": 12.28,
+            "end": 12.42,
+            "confidence": 0.9990234375,
+            "word": " create"
+          },
+          {
+            "start": 12.42,
+            "end": 12.58,
+            "confidence": 0.9990234375,
+            "word": " a"
+          },
+          {
+            "start": 12.58,
+            "end": 12.86,
+            "confidence": 0.99951171875,
+            "word": " world"
+          },
+          {
+            "start": 12.86,
+            "end": 13.04,
+            "confidence": 0.99609375,
+            "word": " where"
+          },
+          {
+            "start": 13.04,
+            "end": 13.32,
+            "confidence": 0.99853515625,
+            "word": " every"
+          },
+          {
+            "start": 13.32,
+            "end": 13.82,
+            "confidence": 0.99951171875,
+            "word": " individual"
+          },
+          {
+            "start": 13.82,
+            "end": 14.26,
+            "confidence": 0.99609375,
+            "word": " feels"
+          },
+          {
+            "start": 14.26,
+            "end": 14.9,
+            "confidence": 0.998046875,
+            "word": " valued,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "and can contribute their unique perspectives.  It's a noble goal, one that resonates deeply with the ethos of innovation and creativity that we hold dear.  But as with any technology,  there's an inherent need for precision  in how we apply it.  You see, the oversimplification of",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 15.426075,
+        "end": 17.526075,
+        "text": " and can contribute their unique perspectives.",
+        "words": [
+          {
+            "start": 15.426075,
+            "end": 15.566075000000001,
+            "confidence": 0.86669921875,
+            "word": " and"
+          },
+          {
+            "start": 15.566075000000001,
+            "end": 15.766075,
+            "confidence": 0.9853515625,
+            "word": " can"
+          },
+          {
+            "start": 15.766075,
+            "end": 16.306075,
+            "confidence": 0.99755859375,
+            "word": " contribute"
+          },
+          {
+            "start": 16.306075,
+            "end": 16.566075,
+            "confidence": 0.984375,
+            "word": " their"
+          },
+          {
+            "start": 16.566075,
+            "end": 16.886075,
+            "confidence": 0.99853515625,
+            "word": " unique"
+          },
+          {
+            "start": 16.886075,
+            "end": 17.526075,
+            "confidence": 0.98046875,
+            "word": " perspectives."
+          }
+        ]
+      },
+      {
+        "start": 18.286075,
+        "end": 24.306075,
+        "text": " It's a noble goal, one that resonates deeply with the ethos of innovation and creativity that we hold dear.",
+        "words": [
+          {
+            "start": 18.286075,
+            "end": 18.446075,
+            "confidence": 0.969970703125,
+            "word": " It's"
+          },
+          {
+            "start": 18.446075,
+            "end": 18.526075,
+            "confidence": 0.99560546875,
+            "word": " a"
+          },
+          {
+            "start": 18.526075,
+            "end": 18.746075,
+            "confidence": 0.982421875,
+            "word": " noble"
+          },
+          {
+            "start": 18.746075,
+            "end": 19.086075,
+            "confidence": 0.9990234375,
+            "word": " goal,"
+          },
+          {
+            "start": 19.286075,
+            "end": 19.386075,
+            "confidence": 0.9970703125,
+            "word": " one"
+          },
+          {
+            "start": 19.386075,
+            "end": 19.506075000000003,
+            "confidence": 0.9970703125,
+            "word": " that"
+          },
+          {
+            "start": 19.506075000000003,
+            "end": 19.886075,
+            "confidence": 0.99267578125,
+            "word": " resonates"
+          },
+          {
+            "start": 19.886075,
+            "end": 20.306075,
+            "confidence": 0.994140625,
+            "word": " deeply"
+          },
+          {
+            "start": 20.306075,
+            "end": 20.526075,
+            "confidence": 0.99365234375,
+            "word": " with"
+          },
+          {
+            "start": 20.526075,
+            "end": 20.666075,
+            "confidence": 0.9951171875,
+            "word": " the"
+          },
+          {
+            "start": 20.686075000000002,
+            "end": 21.086075,
+            "confidence": 0.99658203125,
+            "word": " ethos"
+          },
+          {
+            "start": 21.086075,
+            "end": 21.226075,
+            "confidence": 0.99462890625,
+            "word": " of"
+          },
+          {
+            "start": 21.226075,
+            "end": 21.646075,
+            "confidence": 0.99658203125,
+            "word": " innovation"
+          },
+          {
+            "start": 21.646075,
+            "end": 22.406075,
+            "confidence": 0.97119140625,
+            "word": " and"
+          },
+          {
+            "start": 22.406075,
+            "end": 22.946075,
+            "confidence": 0.99755859375,
+            "word": " creativity"
+          },
+          {
+            "start": 22.946075,
+            "end": 23.506075000000003,
+            "confidence": 0.978515625,
+            "word": " that"
+          },
+          {
+            "start": 23.506075000000003,
+            "end": 23.686075000000002,
+            "confidence": 0.99951171875,
+            "word": " we"
+          },
+          {
+            "start": 23.686075000000002,
+            "end": 23.966075,
+            "confidence": 0.99853515625,
+            "word": " hold"
+          },
+          {
+            "start": 23.966075,
+            "end": 24.306075,
+            "confidence": 0.99462890625,
+            "word": " dear."
+          }
+        ]
+      },
+      {
+        "start": 25.026075,
+        "end": 26.086075,
+        "text": " But as with any technology,",
+        "words": [
+          {
+            "start": 25.026075,
+            "end": 25.126075,
+            "confidence": 0.99365234375,
+            "word": " But"
+          },
+          {
+            "start": 25.126075,
+            "end": 25.246075,
+            "confidence": 0.8916015625,
+            "word": " as"
+          },
+          {
+            "start": 25.246075,
+            "end": 25.346075,
+            "confidence": 0.998046875,
+            "word": " with"
+          },
+          {
+            "start": 25.346075,
+            "end": 25.526075,
+            "confidence": 0.998046875,
+            "word": " any"
+          },
+          {
+            "start": 25.526075,
+            "end": 26.086075,
+            "confidence": 0.998046875,
+            "word": " technology,"
+          }
+        ]
+      },
+      {
+        "start": 26.706075,
+        "end": 28.326075000000003,
+        "text": " there's an inherent need for precision",
+        "words": [
+          {
+            "start": 26.706075,
+            "end": 26.886074999999998,
+            "confidence": 0.952392578125,
+            "word": " there's"
+          },
+          {
+            "start": 26.886074999999998,
+            "end": 26.986075,
+            "confidence": 0.99462890625,
+            "word": " an"
+          },
+          {
+            "start": 26.986075,
+            "end": 27.266075,
+            "confidence": 0.990234375,
+            "word": " inherent"
+          },
+          {
+            "start": 27.266075,
+            "end": 27.506075000000003,
+            "confidence": 0.9990234375,
+            "word": " need"
+          },
+          {
+            "start": 27.506075000000003,
+            "end": 27.706075,
+            "confidence": 0.998046875,
+            "word": " for"
+          },
+          {
+            "start": 27.706075,
+            "end": 28.326075000000003,
+            "confidence": 0.98876953125,
+            "word": " precision"
+          }
+        ]
+      },
+      {
+        "start": 28.886074999999998,
+        "end": 29.926075,
+        "text": " in how we apply it.",
+        "words": [
+          {
+            "start": 28.886074999999998,
+            "end": 28.986075,
+            "confidence": 0.97509765625,
+            "word": " in"
+          },
+          {
+            "start": 28.986075,
+            "end": 29.226075,
+            "confidence": 0.99951171875,
+            "word": " how"
+          },
+          {
+            "start": 29.226075,
+            "end": 29.406075,
+            "confidence": 0.99951171875,
+            "word": " we"
+          },
+          {
+            "start": 29.406075,
+            "end": 29.726075,
+            "confidence": 0.99951171875,
+            "word": " apply"
+          },
+          {
+            "start": 29.726075,
+            "end": 29.926075,
+            "confidence": 0.9970703125,
+            "word": " it."
+          }
+        ]
+      },
+      {
+        "start": 30.006075000000003,
+        "end": 31.826075000000003,
+        "text": " You see, the oversimplification of",
+        "words": [
+          {
+            "start": 30.006075000000003,
+            "end": 30.106075,
+            "confidence": 0.97314453125,
+            "word": " You"
+          },
+          {
+            "start": 30.106075,
+            "end": 30.246075,
+            "confidence": 0.99951171875,
+            "word": " see,"
+          },
+          {
+            "start": 30.526075,
+            "end": 30.606075,
+            "confidence": 0.99853515625,
+            "word": " the"
+          },
+          {
+            "start": 30.606075,
+            "end": 31.526075,
+            "confidence": 0.976806640625,
+            "word": " oversimplification"
+          },
+          {
+            "start": 31.526075,
+            "end": 31.826075000000003,
+            "confidence": 0.9970703125,
+            "word": " of"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "DEI can sometimes lead to unintended consequences.  Rather than bridging divides, it can deepen them.  When we prioritize quotas over true inclusivity,  when we focus on demographic characteristics without understanding the individual,",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 31.860719000000003,
+        "end": 35.380719000000006,
+        "text": " DEI can sometimes lead to unintended consequences.",
+        "words": [
+          {
+            "start": 31.860719000000003,
+            "end": 32.360719,
+            "confidence": 0.73193359375,
+            "word": " DEI"
+          },
+          {
+            "start": 32.360719,
+            "end": 32.580719,
+            "confidence": 0.96044921875,
+            "word": " can"
+          },
+          {
+            "start": 32.580719,
+            "end": 33.080719,
+            "confidence": 0.99365234375,
+            "word": " sometimes"
+          },
+          {
+            "start": 33.080719,
+            "end": 33.480719,
+            "confidence": 0.9970703125,
+            "word": " lead"
+          },
+          {
+            "start": 33.480719,
+            "end": 33.820719000000004,
+            "confidence": 0.99951171875,
+            "word": " to"
+          },
+          {
+            "start": 33.820719000000004,
+            "end": 34.520719,
+            "confidence": 0.99609375,
+            "word": " unintended"
+          },
+          {
+            "start": 34.520719,
+            "end": 35.380719000000006,
+            "confidence": 0.99755859375,
+            "word": " consequences."
+          }
+        ]
+      },
+      {
+        "start": 36.220719,
+        "end": 38.560719000000006,
+        "text": " Rather than bridging divides, it can deepen them.",
+        "words": [
+          {
+            "start": 36.220719,
+            "end": 36.480719,
+            "confidence": 0.99609375,
+            "word": " Rather"
+          },
+          {
+            "start": 36.480719,
+            "end": 36.640719000000004,
+            "confidence": 0.994140625,
+            "word": " than"
+          },
+          {
+            "start": 36.640719000000004,
+            "end": 37.060719000000006,
+            "confidence": 0.995849609375,
+            "word": " bridging"
+          },
+          {
+            "start": 37.060719000000006,
+            "end": 37.460719000000005,
+            "confidence": 0.99560546875,
+            "word": " divides,"
+          },
+          {
+            "start": 37.70071900000001,
+            "end": 37.880719,
+            "confidence": 0.99755859375,
+            "word": " it"
+          },
+          {
+            "start": 37.920719000000005,
+            "end": 38.020719,
+            "confidence": 0.9970703125,
+            "word": " can"
+          },
+          {
+            "start": 38.020719,
+            "end": 38.280719000000005,
+            "confidence": 0.9951171875,
+            "word": " deepen"
+          },
+          {
+            "start": 38.280719000000005,
+            "end": 38.560719000000006,
+            "confidence": 0.998046875,
+            "word": " them."
+          }
+        ]
+      },
+      {
+        "start": 39.140719000000004,
+        "end": 42.660719,
+        "text": " When we prioritize quotas over true inclusivity,",
+        "words": [
+          {
+            "start": 39.140719000000004,
+            "end": 39.34071900000001,
+            "confidence": 0.99755859375,
+            "word": " When"
+          },
+          {
+            "start": 39.34071900000001,
+            "end": 39.600719000000005,
+            "confidence": 0.99951171875,
+            "word": " we"
+          },
+          {
+            "start": 39.600719000000005,
+            "end": 40.420719000000005,
+            "confidence": 0.98828125,
+            "word": " prioritize"
+          },
+          {
+            "start": 40.420719000000005,
+            "end": 41.140719000000004,
+            "confidence": 0.998046875,
+            "word": " quotas"
+          },
+          {
+            "start": 41.20071900000001,
+            "end": 41.420719000000005,
+            "confidence": 0.99560546875,
+            "word": " over"
+          },
+          {
+            "start": 41.420719000000005,
+            "end": 41.84071900000001,
+            "confidence": 0.9921875,
+            "word": " true"
+          },
+          {
+            "start": 41.84071900000001,
+            "end": 42.660719,
+            "confidence": 0.99267578125,
+            "word": " inclusivity,"
+          }
+        ]
+      },
+      {
+        "start": 43.240719000000006,
+        "end": 47.400719,
+        "text": " when we focus on demographic characteristics without understanding the individual,",
+        "words": [
+          {
+            "start": 43.240719000000006,
+            "end": 43.400719,
+            "confidence": 0.9951171875,
+            "word": " when"
+          },
+          {
+            "start": 43.400719,
+            "end": 43.540719,
+            "confidence": 0.99951171875,
+            "word": " we"
+          },
+          {
+            "start": 43.540719,
+            "end": 43.960719000000005,
+            "confidence": 0.99755859375,
+            "word": " focus"
+          },
+          {
+            "start": 43.960719000000005,
+            "end": 44.240719000000006,
+            "confidence": 0.9990234375,
+            "word": " on"
+          },
+          {
+            "start": 44.240719000000006,
+            "end": 44.780719000000005,
+            "confidence": 0.9931640625,
+            "word": " demographic"
+          },
+          {
+            "start": 44.780719000000005,
+            "end": 45.70071900000001,
+            "confidence": 0.998046875,
+            "word": " characteristics"
+          },
+          {
+            "start": 45.70071900000001,
+            "end": 46.020719,
+            "confidence": 0.97998046875,
+            "word": " without"
+          },
+          {
+            "start": 46.020719,
+            "end": 46.720719,
+            "confidence": 0.99755859375,
+            "word": " understanding"
+          },
+          {
+            "start": 46.720719,
+            "end": 46.940719,
+            "confidence": 0.9990234375,
+            "word": " the"
+          },
+          {
+            "start": 46.940719,
+            "end": 47.400719,
+            "confidence": 0.99951171875,
+            "word": " individual,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "we inadvertently foster resentment and division instead of celebrating our differences as sources of innovation,  we may encourage the view that one's value is merely a reflection of their identity markers, not their talents or ideas.  This is not just a matter of semantics, it's about how we design our society,",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 47.984652000000004,
+        "end": 54.384652,
+        "text": " we inadvertently foster resentment and division instead of celebrating our differences as sources of innovation,",
+        "words": [
+          {
+            "start": 47.984652000000004,
+            "end": 48.184652,
+            "confidence": 0.45166015625,
+            "word": " we"
+          },
+          {
+            "start": 48.184652,
+            "end": 49.044652,
+            "confidence": 0.992919921875,
+            "word": " inadvertently"
+          },
+          {
+            "start": 49.504652,
+            "end": 49.604652,
+            "confidence": 0.99755859375,
+            "word": " foster"
+          },
+          {
+            "start": 49.604652,
+            "end": 50.244652,
+            "confidence": 0.994140625,
+            "word": " resentment"
+          },
+          {
+            "start": 50.244652,
+            "end": 50.964652,
+            "confidence": 0.9765625,
+            "word": " and"
+          },
+          {
+            "start": 50.964652,
+            "end": 51.344652,
+            "confidence": 0.98876953125,
+            "word": " division"
+          },
+          {
+            "start": 51.344652,
+            "end": 51.804652000000004,
+            "confidence": 0.335205078125,
+            "word": " instead"
+          },
+          {
+            "start": 51.804652000000004,
+            "end": 52.024652,
+            "confidence": 0.99609375,
+            "word": " of"
+          },
+          {
+            "start": 52.024652,
+            "end": 52.564652,
+            "confidence": 0.99560546875,
+            "word": " celebrating"
+          },
+          {
+            "start": 52.564652,
+            "end": 52.764652,
+            "confidence": 0.99755859375,
+            "word": " our"
+          },
+          {
+            "start": 52.764652,
+            "end": 53.204652,
+            "confidence": 0.9931640625,
+            "word": " differences"
+          },
+          {
+            "start": 53.204652,
+            "end": 53.464652,
+            "confidence": 0.96484375,
+            "word": " as"
+          },
+          {
+            "start": 53.464652,
+            "end": 53.764652,
+            "confidence": 0.990234375,
+            "word": " sources"
+          },
+          {
+            "start": 53.764652,
+            "end": 53.964652,
+            "confidence": 0.99658203125,
+            "word": " of"
+          },
+          {
+            "start": 53.964652,
+            "end": 54.384652,
+            "confidence": 0.9951171875,
+            "word": " innovation,"
+          }
+        ]
+      },
+      {
+        "start": 54.944652000000005,
+        "end": 61.824652,
+        "text": " we may encourage the view that one's value is merely a reflection of their identity markers, not their talents or ideas.",
+        "words": [
+          {
+            "start": 54.944652000000005,
+            "end": 55.064652,
+            "confidence": 0.9931640625,
+            "word": " we"
+          },
+          {
+            "start": 55.064652,
+            "end": 55.244652,
+            "confidence": 0.99072265625,
+            "word": " may"
+          },
+          {
+            "start": 55.244652,
+            "end": 55.664652000000004,
+            "confidence": 0.99853515625,
+            "word": " encourage"
+          },
+          {
+            "start": 55.664652000000004,
+            "end": 55.864652,
+            "confidence": 0.9853515625,
+            "word": " the"
+          },
+          {
+            "start": 55.864652,
+            "end": 56.164652000000004,
+            "confidence": 0.9970703125,
+            "word": " view"
+          },
+          {
+            "start": 56.164652000000004,
+            "end": 56.744652,
+            "confidence": 0.9873046875,
+            "word": " that"
+          },
+          {
+            "start": 56.744652,
+            "end": 57.084652000000006,
+            "confidence": 0.990478515625,
+            "word": " one's"
+          },
+          {
+            "start": 57.084652000000006,
+            "end": 57.424652,
+            "confidence": 0.99658203125,
+            "word": " value"
+          },
+          {
+            "start": 57.424652,
+            "end": 57.664652000000004,
+            "confidence": 0.998046875,
+            "word": " is"
+          },
+          {
+            "start": 57.664652000000004,
+            "end": 57.964652,
+            "confidence": 0.99853515625,
+            "word": " merely"
+          },
+          {
+            "start": 57.964652,
+            "end": 58.184652,
+            "confidence": 0.99072265625,
+            "word": " a"
+          },
+          {
+            "start": 58.184652,
+            "end": 58.564652,
+            "confidence": 0.99853515625,
+            "word": " reflection"
+          },
+          {
+            "start": 58.584652000000006,
+            "end": 58.884652,
+            "confidence": 0.998046875,
+            "word": " of"
+          },
+          {
+            "start": 58.884652,
+            "end": 59.044652,
+            "confidence": 0.99755859375,
+            "word": " their"
+          },
+          {
+            "start": 59.044652,
+            "end": 59.464652,
+            "confidence": 0.9892578125,
+            "word": " identity"
+          },
+          {
+            "start": 59.464652,
+            "end": 59.904652,
+            "confidence": 0.98779296875,
+            "word": " markers,"
+          },
+          {
+            "start": 60.404652,
+            "end": 60.524652,
+            "confidence": 0.99853515625,
+            "word": " not"
+          },
+          {
+            "start": 60.524652,
+            "end": 60.704652,
+            "confidence": 0.9970703125,
+            "word": " their"
+          },
+          {
+            "start": 60.704652,
+            "end": 61.144652,
+            "confidence": 0.998046875,
+            "word": " talents"
+          },
+          {
+            "start": 61.144652,
+            "end": 61.384652,
+            "confidence": 0.994140625,
+            "word": " or"
+          },
+          {
+            "start": 61.384652,
+            "end": 61.824652,
+            "confidence": 0.99853515625,
+            "word": " ideas."
+          }
+        ]
+      },
+      {
+        "start": 62.484652,
+        "end": 66.024652,
+        "text": " This is not just a matter of semantics, it's about how we design our society,",
+        "words": [
+          {
+            "start": 62.484652,
+            "end": 62.604652,
+            "confidence": 0.99609375,
+            "word": " This"
+          },
+          {
+            "start": 62.604652,
+            "end": 62.724652,
+            "confidence": 0.998046875,
+            "word": " is"
+          },
+          {
+            "start": 62.724652,
+            "end": 62.884652,
+            "confidence": 0.9990234375,
+            "word": " not"
+          },
+          {
+            "start": 62.884652,
+            "end": 63.064652,
+            "confidence": 0.9970703125,
+            "word": " just"
+          },
+          {
+            "start": 63.064652,
+            "end": 63.204652,
+            "confidence": 0.994140625,
+            "word": " a"
+          },
+          {
+            "start": 63.204652,
+            "end": 63.364652,
+            "confidence": 0.99951171875,
+            "word": " matter"
+          },
+          {
+            "start": 63.364652,
+            "end": 63.504652,
+            "confidence": 0.9990234375,
+            "word": " of"
+          },
+          {
+            "start": 63.504652,
+            "end": 64.004652,
+            "confidence": 0.99609375,
+            "word": " semantics,"
+          },
+          {
+            "start": 64.164652,
+            "end": 64.284652,
+            "confidence": 0.9482421875,
+            "word": " it's"
+          },
+          {
+            "start": 64.284652,
+            "end": 64.464652,
+            "confidence": 0.9990234375,
+            "word": " about"
+          },
+          {
+            "start": 64.464652,
+            "end": 64.70465200000001,
+            "confidence": 0.99853515625,
+            "word": " how"
+          },
+          {
+            "start": 64.70465200000001,
+            "end": 64.884652,
+            "confidence": 0.9990234375,
+            "word": " we"
+          },
+          {
+            "start": 64.884652,
+            "end": 65.224652,
+            "confidence": 0.9970703125,
+            "word": " design"
+          },
+          {
+            "start": 65.224652,
+            "end": 65.464652,
+            "confidence": 0.998046875,
+            "word": " our"
+          },
+          {
+            "start": 65.464652,
+            "end": 66.024652,
+            "confidence": 0.9990234375,
+            "word": " society,"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "our workplaces, and our communities.  Just as we strive for excellence in product design, we must approach DEI with clarity and intention,  ensuring that the solutions we implement genuinely promote understanding and collaboration.  We must ask ourselves, how do we create an environment",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 66.477552,
+        "end": 68.43755200000001,
+        "text": " our workplaces, and our communities.",
+        "words": [
+          {
+            "start": 66.477552,
+            "end": 66.59755200000001,
+            "confidence": 0.92138671875,
+            "word": " our"
+          },
+          {
+            "start": 66.59755200000001,
+            "end": 67.21755200000001,
+            "confidence": 0.972900390625,
+            "word": " workplaces,"
+          },
+          {
+            "start": 67.677552,
+            "end": 67.77755200000001,
+            "confidence": 0.94140625,
+            "word": " and"
+          },
+          {
+            "start": 67.77755200000001,
+            "end": 67.897552,
+            "confidence": 0.9951171875,
+            "word": " our"
+          },
+          {
+            "start": 67.897552,
+            "end": 68.43755200000001,
+            "confidence": 0.99755859375,
+            "word": " communities."
+          }
+        ]
+      },
+      {
+        "start": 69.01755200000001,
+        "end": 74.71755200000001,
+        "text": " Just as we strive for excellence in product design, we must approach DEI with clarity and intention,",
+        "words": [
+          {
+            "start": 69.01755200000001,
+            "end": 69.21755200000001,
+            "confidence": 0.9970703125,
+            "word": " Just"
+          },
+          {
+            "start": 69.21755200000001,
+            "end": 69.37755200000001,
+            "confidence": 0.99951171875,
+            "word": " as"
+          },
+          {
+            "start": 69.37755200000001,
+            "end": 69.51755200000001,
+            "confidence": 0.9990234375,
+            "word": " we"
+          },
+          {
+            "start": 69.51755200000001,
+            "end": 69.837552,
+            "confidence": 0.99951171875,
+            "word": " strive"
+          },
+          {
+            "start": 69.837552,
+            "end": 70.117552,
+            "confidence": 0.99853515625,
+            "word": " for"
+          },
+          {
+            "start": 70.117552,
+            "end": 70.55755200000002,
+            "confidence": 0.9970703125,
+            "word": " excellence"
+          },
+          {
+            "start": 70.55755200000002,
+            "end": 70.79755200000001,
+            "confidence": 0.99267578125,
+            "word": " in"
+          },
+          {
+            "start": 70.79755200000001,
+            "end": 71.13755200000001,
+            "confidence": 0.99365234375,
+            "word": " product"
+          },
+          {
+            "start": 71.13755200000001,
+            "end": 71.55755200000002,
+            "confidence": 0.9990234375,
+            "word": " design,"
+          },
+          {
+            "start": 72.037552,
+            "end": 72.15755200000001,
+            "confidence": 0.99853515625,
+            "word": " we"
+          },
+          {
+            "start": 72.15755200000001,
+            "end": 72.397552,
+            "confidence": 0.9990234375,
+            "word": " must"
+          },
+          {
+            "start": 72.397552,
+            "end": 72.837552,
+            "confidence": 0.99853515625,
+            "word": " approach"
+          },
+          {
+            "start": 72.837552,
+            "end": 73.43755200000001,
+            "confidence": 0.982421875,
+            "word": " DEI"
+          },
+          {
+            "start": 73.43755200000001,
+            "end": 73.63755200000001,
+            "confidence": 0.99658203125,
+            "word": " with"
+          },
+          {
+            "start": 73.63755200000001,
+            "end": 74.01755200000001,
+            "confidence": 0.9990234375,
+            "word": " clarity"
+          },
+          {
+            "start": 74.01755200000001,
+            "end": 74.29755200000001,
+            "confidence": 0.99609375,
+            "word": " and"
+          },
+          {
+            "start": 74.29755200000001,
+            "end": 74.71755200000001,
+            "confidence": 0.990234375,
+            "word": " intention,"
+          }
+        ]
+      },
+      {
+        "start": 75.29755200000001,
+        "end": 79.71755200000001,
+        "text": " ensuring that the solutions we implement genuinely promote understanding and collaboration.",
+        "words": [
+          {
+            "start": 75.29755200000001,
+            "end": 75.63755200000001,
+            "confidence": 0.9912109375,
+            "word": " ensuring"
+          },
+          {
+            "start": 75.63755200000001,
+            "end": 75.87755200000001,
+            "confidence": 0.99853515625,
+            "word": " that"
+          },
+          {
+            "start": 75.87755200000001,
+            "end": 76.01755200000001,
+            "confidence": 0.99755859375,
+            "word": " the"
+          },
+          {
+            "start": 76.01755200000001,
+            "end": 76.417552,
+            "confidence": 0.9970703125,
+            "word": " solutions"
+          },
+          {
+            "start": 76.417552,
+            "end": 76.65755200000001,
+            "confidence": 0.99560546875,
+            "word": " we"
+          },
+          {
+            "start": 76.65755200000001,
+            "end": 77.13755200000001,
+            "confidence": 0.99755859375,
+            "word": " implement"
+          },
+          {
+            "start": 77.59755200000001,
+            "end": 77.93755200000001,
+            "confidence": 0.95849609375,
+            "word": " genuinely"
+          },
+          {
+            "start": 77.93755200000001,
+            "end": 78.457552,
+            "confidence": 0.99853515625,
+            "word": " promote"
+          },
+          {
+            "start": 78.457552,
+            "end": 79.07755200000001,
+            "confidence": 0.998046875,
+            "word": " understanding"
+          },
+          {
+            "start": 79.07755200000001,
+            "end": 79.257552,
+            "confidence": 0.99755859375,
+            "word": " and"
+          },
+          {
+            "start": 79.257552,
+            "end": 79.71755200000001,
+            "confidence": 0.9951171875,
+            "word": " collaboration."
+          }
+        ]
+      },
+      {
+        "start": 79.71755200000001,
+        "end": 82.43755200000001,
+        "text": " We must ask ourselves, how do we create an environment",
+        "words": [
+          {
+            "start": 79.71755200000001,
+            "end": 80.21755200000001,
+            "confidence": 0.99755859375,
+            "word": " We"
+          },
+          {
+            "start": 80.21755200000001,
+            "end": 80.417552,
+            "confidence": 0.99951171875,
+            "word": " must"
+          },
+          {
+            "start": 80.417552,
+            "end": 80.677552,
+            "confidence": 0.99951171875,
+            "word": " ask"
+          },
+          {
+            "start": 80.677552,
+            "end": 80.99755200000001,
+            "confidence": 0.98779296875,
+            "word": " ourselves,"
+          },
+          {
+            "start": 81.37755200000001,
+            "end": 81.477552,
+            "confidence": 0.72607421875,
+            "word": " how"
+          },
+          {
+            "start": 81.477552,
+            "end": 81.57755200000001,
+            "confidence": 0.99462890625,
+            "word": " do"
+          },
+          {
+            "start": 81.57755200000001,
+            "end": 81.677552,
+            "confidence": 0.99951171875,
+            "word": " we"
+          },
+          {
+            "start": 81.677552,
+            "end": 81.917552,
+            "confidence": 0.9990234375,
+            "word": " create"
+          },
+          {
+            "start": 81.917552,
+            "end": 82.07755200000001,
+            "confidence": 0.99560546875,
+            "word": " an"
+          },
+          {
+            "start": 82.07755200000001,
+            "end": 82.43755200000001,
+            "confidence": 0.99951171875,
+            "word": " environment"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "where every voice is not just heard, but truly listened to?  How do we cultivate a culture where diversity is celebrated not as a checkbox, but as the very foundation of our creative process?  In the end, it's not about statistics.  It's about hearts and minds.  Innovation flourishes",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 82.927552,
+        "end": 85.827552,
+        "text": " where every voice is not just heard, but truly listened to?",
+        "words": [
+          {
+            "start": 82.927552,
+            "end": 83.027552,
+            "confidence": 0.5986328125,
+            "word": " where"
+          },
+          {
+            "start": 83.027552,
+            "end": 83.327552,
+            "confidence": 0.9931640625,
+            "word": " every"
+          },
+          {
+            "start": 83.327552,
+            "end": 83.667552,
+            "confidence": 0.998046875,
+            "word": " voice"
+          },
+          {
+            "start": 83.667552,
+            "end": 83.827552,
+            "confidence": 0.99609375,
+            "word": " is"
+          },
+          {
+            "start": 83.827552,
+            "end": 83.967552,
+            "confidence": 0.9951171875,
+            "word": " not"
+          },
+          {
+            "start": 83.967552,
+            "end": 84.147552,
+            "confidence": 0.9970703125,
+            "word": " just"
+          },
+          {
+            "start": 84.147552,
+            "end": 84.527552,
+            "confidence": 0.99853515625,
+            "word": " heard,"
+          },
+          {
+            "start": 84.84755200000001,
+            "end": 84.947552,
+            "confidence": 0.99951171875,
+            "word": " but"
+          },
+          {
+            "start": 84.947552,
+            "end": 85.247552,
+            "confidence": 0.9931640625,
+            "word": " truly"
+          },
+          {
+            "start": 85.247552,
+            "end": 85.607552,
+            "confidence": 0.9794921875,
+            "word": " listened"
+          },
+          {
+            "start": 85.607552,
+            "end": 85.827552,
+            "confidence": 0.9970703125,
+            "word": " to?"
+          }
+        ]
+      },
+      {
+        "start": 86.34755200000001,
+        "end": 93.087552,
+        "text": " How do we cultivate a culture where diversity is celebrated not as a checkbox, but as the very foundation of our creative process?",
+        "words": [
+          {
+            "start": 86.34755200000001,
+            "end": 86.447552,
+            "confidence": 0.998046875,
+            "word": " How"
+          },
+          {
+            "start": 86.447552,
+            "end": 86.527552,
+            "confidence": 0.99658203125,
+            "word": " do"
+          },
+          {
+            "start": 86.527552,
+            "end": 86.647552,
+            "confidence": 0.998046875,
+            "word": " we"
+          },
+          {
+            "start": 86.647552,
+            "end": 87.007552,
+            "confidence": 0.994140625,
+            "word": " cultivate"
+          },
+          {
+            "start": 87.027552,
+            "end": 87.247552,
+            "confidence": 0.9970703125,
+            "word": " a"
+          },
+          {
+            "start": 87.287552,
+            "end": 87.547552,
+            "confidence": 0.99951171875,
+            "word": " culture"
+          },
+          {
+            "start": 87.547552,
+            "end": 87.807552,
+            "confidence": 0.98388671875,
+            "word": " where"
+          },
+          {
+            "start": 87.807552,
+            "end": 88.287552,
+            "confidence": 0.99560546875,
+            "word": " diversity"
+          },
+          {
+            "start": 88.287552,
+            "end": 88.607552,
+            "confidence": 0.99853515625,
+            "word": " is"
+          },
+          {
+            "start": 88.607552,
+            "end": 89.147552,
+            "confidence": 0.9990234375,
+            "word": " celebrated"
+          },
+          {
+            "start": 89.147552,
+            "end": 89.447552,
+            "confidence": 0.5712890625,
+            "word": " not"
+          },
+          {
+            "start": 89.447552,
+            "end": 89.567552,
+            "confidence": 0.99853515625,
+            "word": " as"
+          },
+          {
+            "start": 89.567552,
+            "end": 89.667552,
+            "confidence": 0.99609375,
+            "word": " a"
+          },
+          {
+            "start": 89.667552,
+            "end": 90.147552,
+            "confidence": 0.85546875,
+            "word": " checkbox,"
+          },
+          {
+            "start": 90.70755199999999,
+            "end": 90.807552,
+            "confidence": 0.99951171875,
+            "word": " but"
+          },
+          {
+            "start": 90.807552,
+            "end": 90.947552,
+            "confidence": 0.8974609375,
+            "word": " as"
+          },
+          {
+            "start": 90.947552,
+            "end": 91.047552,
+            "confidence": 0.99755859375,
+            "word": " the"
+          },
+          {
+            "start": 91.047552,
+            "end": 91.307552,
+            "confidence": 0.99951171875,
+            "word": " very"
+          },
+          {
+            "start": 91.307552,
+            "end": 91.807552,
+            "confidence": 0.9990234375,
+            "word": " foundation"
+          },
+          {
+            "start": 91.807552,
+            "end": 92.12755200000001,
+            "confidence": 0.9990234375,
+            "word": " of"
+          },
+          {
+            "start": 92.12755200000001,
+            "end": 92.247552,
+            "confidence": 0.99853515625,
+            "word": " our"
+          },
+          {
+            "start": 92.247552,
+            "end": 92.547552,
+            "confidence": 0.99951171875,
+            "word": " creative"
+          },
+          {
+            "start": 92.547552,
+            "end": 93.087552,
+            "confidence": 0.9990234375,
+            "word": " process?"
+          }
+        ]
+      },
+      {
+        "start": 93.70755199999999,
+        "end": 95.547552,
+        "text": " In the end, it's not about statistics.",
+        "words": [
+          {
+            "start": 93.70755199999999,
+            "end": 93.807552,
+            "confidence": 0.99658203125,
+            "word": " In"
+          },
+          {
+            "start": 93.807552,
+            "end": 93.927552,
+            "confidence": 0.99951171875,
+            "word": " the"
+          },
+          {
+            "start": 93.927552,
+            "end": 94.12755200000001,
+            "confidence": 0.9990234375,
+            "word": " end,"
+          },
+          {
+            "start": 94.507552,
+            "end": 94.607552,
+            "confidence": 0.99072265625,
+            "word": " it's"
+          },
+          {
+            "start": 94.607552,
+            "end": 94.727552,
+            "confidence": 0.99951171875,
+            "word": " not"
+          },
+          {
+            "start": 94.727552,
+            "end": 94.967552,
+            "confidence": 0.9990234375,
+            "word": " about"
+          },
+          {
+            "start": 94.967552,
+            "end": 95.547552,
+            "confidence": 0.99853515625,
+            "word": " statistics."
+          }
+        ]
+      },
+      {
+        "start": 96.20755199999999,
+        "end": 97.467552,
+        "text": " It's about hearts and minds.",
+        "words": [
+          {
+            "start": 96.20755199999999,
+            "end": 96.327552,
+            "confidence": 0.998291015625,
+            "word": " It's"
+          },
+          {
+            "start": 96.327552,
+            "end": 96.507552,
+            "confidence": 0.99951171875,
+            "word": " about"
+          },
+          {
+            "start": 96.507552,
+            "end": 96.907552,
+            "confidence": 0.998046875,
+            "word": " hearts"
+          },
+          {
+            "start": 96.907552,
+            "end": 97.12755200000001,
+            "confidence": 0.9970703125,
+            "word": " and"
+          },
+          {
+            "start": 97.12755200000001,
+            "end": 97.467552,
+            "confidence": 0.99853515625,
+            "word": " minds."
+          }
+        ]
+      },
+      {
+        "start": 97.987552,
+        "end": 98.947552,
+        "text": " Innovation flourishes",
+        "words": [
+          {
+            "start": 97.987552,
+            "end": 98.34755200000001,
+            "confidence": 0.99609375,
+            "word": " Innovation"
+          },
+          {
+            "start": 98.34755200000001,
+            "end": 98.947552,
+            "confidence": 0.99951171875,
+            "word": " flourishes"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "in a space of trust and genuine connection.  Let's reclaim DEI to fulfill its true potential,  fostering unity and igniting inspiration  so we can build a future that's not just diverse,  but truly equitable.  Thank you.",
+    "language_code": "en",
+    "segments": [
+      {
+        "start": 99.1014895,
+        "end": 101.0814895,
+        "text": " in a space of trust and genuine connection.",
+        "words": [
+          {
+            "start": 99.1014895,
+            "end": 99.1014895,
+            "confidence": 0.217041015625,
+            "word": " in"
+          },
+          {
+            "start": 99.1014895,
+            "end": 99.2014895,
+            "confidence": 0.966796875,
+            "word": " a"
+          },
+          {
+            "start": 99.2014895,
+            "end": 99.4414895,
+            "confidence": 0.99755859375,
+            "word": " space"
+          },
+          {
+            "start": 99.4414895,
+            "end": 99.5814895,
+            "confidence": 0.9990234375,
+            "word": " of"
+          },
+          {
+            "start": 99.6814895,
+            "end": 99.92148949999999,
+            "confidence": 0.99755859375,
+            "word": " trust"
+          },
+          {
+            "start": 100.2814895,
+            "end": 100.3814895,
+            "confidence": 0.97216796875,
+            "word": " and"
+          },
+          {
+            "start": 100.3814895,
+            "end": 100.6814895,
+            "confidence": 0.9912109375,
+            "word": " genuine"
+          },
+          {
+            "start": 100.6814895,
+            "end": 101.0814895,
+            "confidence": 0.99462890625,
+            "word": " connection."
+          }
+        ]
+      },
+      {
+        "start": 101.3014895,
+        "end": 104.5014895,
+        "text": " Let's reclaim DEI to fulfill its true potential,",
+        "words": [
+          {
+            "start": 101.3014895,
+            "end": 101.6014895,
+            "confidence": 0.98046875,
+            "word": " Let's"
+          },
+          {
+            "start": 101.6014895,
+            "end": 102.0014895,
+            "confidence": 0.9658203125,
+            "word": " reclaim"
+          },
+          {
+            "start": 102.0014895,
+            "end": 102.7414895,
+            "confidence": 0.968994140625,
+            "word": " DEI"
+          },
+          {
+            "start": 102.7414895,
+            "end": 103.0014895,
+            "confidence": 0.99267578125,
+            "word": " to"
+          },
+          {
+            "start": 103.0014895,
+            "end": 103.3414895,
+            "confidence": 0.97802734375,
+            "word": " fulfill"
+          },
+          {
+            "start": 103.3414895,
+            "end": 103.6014895,
+            "confidence": 0.90087890625,
+            "word": " its"
+          },
+          {
+            "start": 103.8414895,
+            "end": 103.9614895,
+            "confidence": 0.99560546875,
+            "word": " true"
+          },
+          {
+            "start": 103.9614895,
+            "end": 104.5014895,
+            "confidence": 0.99951171875,
+            "word": " potential,"
+          }
+        ]
+      },
+      {
+        "start": 105.2414895,
+        "end": 107.8414895,
+        "text": " fostering unity and igniting inspiration",
+        "words": [
+          {
+            "start": 105.2414895,
+            "end": 105.78148949999999,
+            "confidence": 0.99755859375,
+            "word": " fostering"
+          },
+          {
+            "start": 105.78148949999999,
+            "end": 106.1814895,
+            "confidence": 0.98876953125,
+            "word": " unity"
+          },
+          {
+            "start": 106.1814895,
+            "end": 106.78148949999999,
+            "confidence": 0.970703125,
+            "word": " and"
+          },
+          {
+            "start": 106.78148949999999,
+            "end": 107.2214895,
+            "confidence": 0.998779296875,
+            "word": " igniting"
+          },
+          {
+            "start": 107.2214895,
+            "end": 107.8414895,
+            "confidence": 0.998046875,
+            "word": " inspiration"
+          }
+        ]
+      },
+      {
+        "start": 108.5214895,
+        "end": 111.1014895,
+        "text": " so we can build a future that's not just diverse,",
+        "words": [
+          {
+            "start": 108.5214895,
+            "end": 108.6214895,
+            "confidence": 0.75244140625,
+            "word": " so"
+          },
+          {
+            "start": 108.6214895,
+            "end": 108.7614895,
+            "confidence": 0.9873046875,
+            "word": " we"
+          },
+          {
+            "start": 108.7614895,
+            "end": 108.8814895,
+            "confidence": 0.99755859375,
+            "word": " can"
+          },
+          {
+            "start": 108.8814895,
+            "end": 109.1214895,
+            "confidence": 0.99853515625,
+            "word": " build"
+          },
+          {
+            "start": 109.1214895,
+            "end": 109.2414895,
+            "confidence": 0.9970703125,
+            "word": " a"
+          },
+          {
+            "start": 109.2414895,
+            "end": 109.6214895,
+            "confidence": 0.9990234375,
+            "word": " future"
+          },
+          {
+            "start": 109.6214895,
+            "end": 110.2014895,
+            "confidence": 0.97216796875,
+            "word": " that's"
+          },
+          {
+            "start": 110.2014895,
+            "end": 110.4014895,
+            "confidence": 0.99853515625,
+            "word": " not"
+          },
+          {
+            "start": 110.4014895,
+            "end": 110.7214895,
+            "confidence": 0.99951171875,
+            "word": " just"
+          },
+          {
+            "start": 110.7214895,
+            "end": 111.1014895,
+            "confidence": 0.9775390625,
+            "word": " diverse,"
+          }
+        ]
+      },
+      {
+        "start": 111.6614895,
+        "end": 112.8014895,
+        "text": " but truly equitable.",
+        "words": [
+          {
+            "start": 111.6614895,
+            "end": 111.7614895,
+            "confidence": 0.99951171875,
+            "word": " but"
+          },
+          {
+            "start": 111.7614895,
+            "end": 112.1614895,
+            "confidence": 0.99853515625,
+            "word": " truly"
+          },
+          {
+            "start": 112.1614895,
+            "end": 112.8014895,
+            "confidence": 0.99755859375,
+            "word": " equitable."
+          }
+        ]
+      },
+      {
+        "start": 113.4014895,
+        "end": 113.6214895,
+        "text": " Thank you.",
+        "words": [
+          {
+            "start": 113.4014895,
+            "end": 113.5214895,
+            "confidence": 0.9951171875,
+            "word": " Thank"
+          },
+          {
+            "start": 113.5214895,
+            "end": 113.6214895,
+            "confidence": 0.96044921875,
+            "word": " you."
+          }
+        ]
+      }
+    ]
+  }
+]

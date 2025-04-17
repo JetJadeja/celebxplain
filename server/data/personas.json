@@ -4,24 +4,24 @@
       "id": "trump",
       "name": "Donald Trump",
       "tts_voice_link": "s3://voice-cloning-zero-shot/-Kpl6-DPEeEawD1RXY5Ny/leader/manifest.json",
-      "icon_url": "https://sdmntprsouthcentralus.oaiusercontent.com/files/00000000-9788-61f7-8628-6e1313ffc6f6/raw?se=2025-04-17T19%3A16%3A34Z&sp=r&sv=2024-08-04&sr=b&scid=8413291b-6fc6-5716-9cd0-4ccccffb8854&skoid=fa7966e7-f8ea-483c-919a-13acfd61d696&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-04-16T21%3A27%3A43Z&ske=2025-04-17T21%3A27%3A43Z&sks=b&skv=2024-08-04&sig=uaYZ66jFrXn%2B2Wj/NcCQlMb2J%2BlfymVQ%2BCkPmDfzzQE%3D",
-      "video_path": "data/videos/trump.mp4",
+      "icon_url": "/static/icons/trump.png",
+      "video_path": "",
       "style_prompt": "Speak in a rambling style with frequent superlatives like 'tremendous' and 'huge'"
     },
     {
       "id": "kanye",
       "name": "Kanye West",
       "tts_voice_link": "s3://voice-cloning-zero-shot/jOCbaKjGWtt4ap9euTfJh/rapper/manifest.json",
-      "icon_url": "https://sdmntprsouthcentralus.oaiusercontent.com/files/00000000-ae34-61f7-b508-814c18bca24c/raw?se=2025-04-17T19%3A13%3A51Z&sp=r&sv=2024-08-04&sr=b&scid=a242690a-29af-5b67-9815-ba82bbe041ec&skoid=fa7966e7-f8ea-483c-919a-13acfd61d696&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-04-16T21%3A26%3A23Z&ske=2025-04-17T21%3A26%3A23Z&sks=b&skv=2024-08-04&sig=9O08C5yav8E/bl6SZaLRHfoIZNSGhQRmDWJpofyIwrg%3D",
-      "video_path": "data/videos/kanye.mp4",
+      "icon_url": "/static/icons/kanye.png",
+      "video_path": "",
       "style_prompt": "Speak in a staccato style with short, sharp bursts of energy"
     },
     {
       "id": "steve_jobs",
       "name": "Steve Jobs",
       "tts_voice_link": "s3://voice-cloning-zero-shot/Xgz3bnyUCyPLStFI1IGHj/founder/manifest.json",
-      "icon_url": "https://sdmntprsouthcentralus.oaiusercontent.com/files/00000000-17fc-61f7-babf-89e1fc8f2a34/raw?se=2025-04-17T18%3A44%3A44Z&sp=r&sv=2024-08-04&sr=b&scid=37035bcf-7416-570c-89b6-f47f1d8edc1b&skoid=fa7966e7-f8ea-483c-919a-13acfd61d696&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-04-16T21%3A27%3A34Z&ske=2025-04-17T21%3A27%3A34Z&sks=b&skv=2024-08-04&sig=B1vu/V4aBeZRLxI4le8EqSsD/vQZE%2B%2BMzg7HBwFylg4%3D",
-      "video_path": "data/videos/kanye.mp4",
+      "icon_url": "/static/icons/steve_jobs.png",
+      "video_path": "server/data/base_videos/steve_jobs.mp4",
       "style_prompt": "You are Steve Jobs, the founder of Apple. Speak in a way that is both technical and inspirational."
     }
   ]
