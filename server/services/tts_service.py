@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-print(os.getenv("PLAYHT_TTS_USER"))
-print(os.getenv("PLAYHT_TTS_API_KEY"))
+# Get credentials
+user_id = os.getenv("PLAYHT_TTS_USER")
+api_key = os.getenv("PLAYHT_TTS_API_KEY")
 
 def generate_speech(job_id, persona_id, script):
     """Generate speech audio from the script in the celebrity's voice"""
@@ -24,30 +25,19 @@ def generate_speech(job_id, persona_id, script):
     
     persona = next((p for p in personas["personas"] if p["id"] == persona_id), None)
     voice_link = persona["tts_voice_link"]
-    
+
+    # Create the speech file
+    create_speech_file(output_file, script, voice_link)
+
+def create_speech_file(output_file, script, voice_link):
     # API endpoint
     url = "https://api.play.ht/api/v2/tts/stream"
-    
-    # Get credentials
-    user_id = os.getenv("PLAYHT_TTS_USER")
-    api_key = os.getenv("PLAYHT_TTS_API_KEY")
-    
-    # Debug info
-    print(f"Using credentials - USER ID: {user_id[:5] if user_id else 'None'}... API KEY: {api_key[:5] if api_key else 'None'}...")
     
     # Headers - according to Play.ht API docs
     # Note: The AUTHORIZATION header might need "Bearer " prefix depending on the API
     headers = {
         "X-USER-ID": user_id,
         "Authorization": api_key,  # Changed from AUTHORIZATION to Authorization
-        "accept": "audio/mpeg",
-        "content-type": "application/json"
-    }
-    
-    # Alternative headers format to try if the above doesn't work
-    alt_headers = {
-        "X-USER-ID": user_id,
-        "Authorization": f"Bearer {api_key}",  # Try with Bearer prefix
         "accept": "audio/mpeg",
         "content-type": "application/json"
     }
@@ -61,18 +51,8 @@ def generate_speech(job_id, persona_id, script):
     }
     
     try:
-        # Make the request with standard headers
-        print("Making request to Play.ht API...")
-        print(f"Request URL: {url}")
-        print(f"Request payload: {payload}")
-        print(f"Headers (redacted): {headers.keys()}")
-        
+        # Call the API        
         response = requests.post(url, headers=headers, json=payload, stream=True)
-        
-        # If failed, try alternative headers
-        if response.status_code == 403:
-            print("First attempt failed with 403, trying alternative header format...")
-            response = requests.post(url, headers=alt_headers, json=payload, stream=True)
         
         # Raise exception for HTTP errors
         response.raise_for_status()
@@ -83,8 +63,8 @@ def generate_speech(job_id, persona_id, script):
                 if chunk:
                     audio_file.write(chunk)
         
-        print(f"Speech generated and saved to {output_file}")
         return output_file
+    
     except Exception as e:
         print(f"Error generating speech: {e}")
         if hasattr(e, 'response'):
