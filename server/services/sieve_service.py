@@ -63,7 +63,7 @@ def transcribe_audio_file(audio_file_path):
         job = transcriber.push(
             file=audio_file,
             backend="stable-ts-whisper-large-v3-turbo",
-            word_level_timestamps=True,
+            word_level_timestamps=False,
             source_language="auto"
         )
         
