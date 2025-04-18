@@ -136,7 +136,7 @@ def assemble_visuals(num_segments, output_dir):
         final_clip = concatenate_videoclips(clips, method="compose")
         
         # Output path for the final video
-        final_path = os.path.join(output_dir, "final_video.mp4")
+        final_path = os.path.join(output_dir, "final_visuals.mp4")
         
         # Write the final video with settings that preserve animations
         print(f"Writing final video ({final_clip.duration} seconds)...")

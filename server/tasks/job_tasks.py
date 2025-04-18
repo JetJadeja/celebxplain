@@ -48,7 +48,8 @@ def process_job(job_id, persona_id, query):
             
             visuals_task = executor.submit(
                 create_explanatory_visuals,
-                transcription
+                transcription,
+                results_dir
             )
             
             # Wait for both to complete
