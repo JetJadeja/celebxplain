@@ -4,6 +4,14 @@ import React, { useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { JobResult } from "@/components/job-result";
 import { useJob } from "@/lib/job-context";
+import {
+  Window,
+  WindowHeader,
+  WindowContent,
+  Button,
+  Frame,
+  Hourglass,
+} from "react95";
 
 export default function JobResultsPage() {
   const router = useRouter();
@@ -82,31 +90,59 @@ export default function JobResultsPage() {
     };
   }, [jobId, fetchJobById]);
 
+  // Determine if the job is actively processing
+  const isProcessing =
+    jobStatus &&
+    jobStatus.status !== "completed" &&
+    jobStatus.status !== "failed" &&
+    jobStatus.status !== "error";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-primary/10 flex flex-col">
-      {/* Header */}
-      <header className="container mx-auto py-8">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <h1 className="heading-lg max-w-2xl">
-            Celebrity Explainer Generator
-          </h1>
-          <p className="tagline max-w-xl">
+    <div
+      className="min-h-screen p-4 flex flex-col items-center justify-center"
+      style={{ background: "teal" }}
+    >
+      {/* Optional: Add a frame around the entire window area if desired */}
+      {/* <Frame variant="outside" className="w-full max-w-5xl p-1"> */}
+      <Window className="w-full max-w-4xl mx-auto">
+        <WindowHeader className="flex items-center justify-between">
+          <span>Celebrity Explainer Generator</span>
+          <Button onClick={() => router.push("/")} size="sm">
+            <span style={{ transform: "translateY(-1px)" }}>X</span>
+          </Button>
+        </WindowHeader>
+        <WindowContent className="flex flex-col items-center">
+          {/* Tagline moved to top */}
+          <p className="tagline mb-4">
             Learn anything, explained by your favorite celebrities
           </p>
-        </div>
-      </header>
 
-      {/* Results */}
-      <main className="container mx-auto flex-1 py-8 px-4 flex flex-col items-center">
-        <JobResult onReset={handleReset} />
-      </main>
+          {/* Conditionally show Hourglass and updated message */}
+          {isProcessing && (
+            <div className="flex flex-col items-center mb-4">
+              <Hourglass size={32} className="mb-2" />
+              <p className="text-center text-sm">
+                Your explanation is being generated.
+                <br />
+                This can take up to 15 minutes.
+              </p>
+            </div>
+          )}
 
-      {/* Footer */}
-      <footer className="container mx-auto py-6 border-t border-border">
-        <div className="flex justify-center items-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Celebrity Explainer Generator</p>
-        </div>
-      </footer>
+          {/* Frame around the JobResult */}
+          <Frame variant="inside" className="w-full p-4 shadow-inner">
+            <main className="flex-1 flex flex-col items-center">
+              <JobResult onReset={handleReset} />
+            </main>
+          </Frame>
+
+          {/* Footer inside WindowContent */}
+          <footer className="mt-6 text-center text-xs">
+            <p>© {new Date().getFullYear()} Celebrity Explainer Generator</p>
+          </footer>
+        </WindowContent>
+      </Window>
+      {/* </Frame> */}
     </div>
   );
 }
