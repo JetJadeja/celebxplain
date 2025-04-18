@@ -12,7 +12,7 @@ import subprocess
 import io
 import tempfile
 import re
-
+from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 class VisualSegment(BaseModel):
     type: Literal["animation", "image"]
@@ -52,7 +52,7 @@ def create_explanatory_visuals(transcription, output_dir):
             print(f"Failed to create {segment.type} for segment {i+1}")
     
     # Assemble the visuals into a final video
-    final_video = assemble_visuals(segment_paths, output_dir)
+    final_video = assemble_visuals(len(segment_paths), output_dir)
     
     # Save the visual plan for reference
     plan_path = os.path.join(output_dir, "visual_plan.json")
@@ -94,80 +94,72 @@ def create_visual_plan(transcription):
     
     return completion.choices[0].message.parsed
 
-# Create the visuals one by one
-def create_visuals(visual_plan):
-    pass
-
-# Assemble the visuals into a final supporting video
-def assemble_visuals(segment_paths, output_dir):
+# Assemble the visuals into a final video
+def assemble_visuals(num_segments, output_dir):
     """
-    Assembles individual video segments into a final video using a simpler approach.
+    Assembles individual video segments into a final video using MoviePy.
     
     Args:
-        segment_paths: List of tuples (path, start_time, end_time)
-        output_dir: Directory to save the final video
+        num_segments: Number of segments (0 to num_segments-1)
+        output_dir: Directory containing segments and where to save the final video
         
     Returns:
         Path to the final assembled video or None if failed
     """
-    if not segment_paths:
-        print("No segments to assemble")
-        return None
-    
     try:
-        # Find the end time of the last segment
-        max_end_time = max([end_time for _, _, end_time in segment_paths])
-        
-        # Create a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # First, create a blank background video
-            background_path = os.path.join(temp_dir, "background.mp4")
-            bg_cmd = [
-                "ffmpeg",
-                "-f", "lavfi",
-                "-i", f"color=c=black:s=1920x1080:r=30:d={max_end_time}",
-                "-c:v", "libx264",
-                "-y",
-                background_path
-            ]
-            
-            subprocess.run(bg_cmd, capture_output=True, check=False)
-            
-            # Then add each segment one by one
-            current_video = background_path
-            
-            for i, (path, start_time, end_time) in enumerate(segment_paths):
-                # Output for this step
-                output_path = os.path.join(temp_dir, f"step_{i}.mp4")
+        # Collect all the video clips
+        clips = []
+        for i in range(num_segments):
+            segment_path = os.path.join(output_dir, f"segment_{i}.mp4")
+            if os.path.exists(segment_path):
+                # Ensure we're using proper video reading settings
+                clip = VideoFileClip(segment_path, audio=False, fps_source='fps')
                 
-                # Overlay the segment at the right time
-                overlay_cmd = [
-                    "ffmpeg",
-                    "-i", current_video,
-                    "-i", path,
-                    "-filter_complex", f"[0:v][1:v]overlay=eof_action=pass:enable='between(t,{start_time},{end_time})'",
-                    "-c:v", "libx264",
-                    "-preset", "medium",
-                    "-y",
-                    output_path
-                ]
-                
-                subprocess.run(overlay_cmd, capture_output=True, check=False)
-                
-                if os.path.exists(output_path):
-                    current_video = output_path
+                # Check if the clip is actually a video (has changing frames)
+                if clip.duration > 0:
+                    # Force recalculation of frames to ensure animation is captured
+                    test_frame = clip.get_frame(0)  # Get first frame
+                    last_frame = clip.get_frame(clip.duration - 0.1)  # Get last frame
+                    
+                    print(f"Added segment_{i}.mp4 ({clip.duration} seconds)")
+                    clips.append(clip)
                 else:
-                    print(f"Failed to add segment {i}")
-            
-            # Final output
-            final_path = os.path.join(output_dir, "final_video.mp4")
-            
-            # Copy the last step to the final output
-            shutil.copy(current_video, final_path)
-            
-            print(f"Successfully created final video at {final_path}")
-            return final_path
-            
+                    print(f"Warning: Segment {i} has zero duration")
+            else:
+                print(f"Warning: Segment {i} not found at {segment_path}")
+        
+        if not clips:
+            print("No video segments found to concatenate")
+            return None
+        
+        # Concatenate all clips with specific settings to preserve animations
+        final_clip = concatenate_videoclips(clips, method="compose")
+        
+        # Output path for the final video
+        final_path = os.path.join(output_dir, "final_video.mp4")
+        
+        # Write the final video with settings that preserve animations
+        print(f"Writing final video ({final_clip.duration} seconds)...")
+        final_clip.write_videofile(
+            final_path,
+            codec='libx264',
+            audio_codec='aac',
+            fps=30,
+            preset='medium',
+            bitrate='8000k',  # Higher bitrate to preserve quality
+            threads=4,
+            ffmpeg_params=["-pix_fmt", "yuv420p"],  # Ensures compatibility
+            logger=None  # Disable progress bar
+        )
+        
+        # Close the clips to free resources
+        final_clip.close()
+        for clip in clips:
+            clip.close()
+        
+        print(f"Successfully created final video at {final_path}")
+        return final_path
+        
     except Exception as e:
         import traceback
         print(f"Error assembling visuals: {e}")
@@ -253,7 +245,6 @@ def create_animation(description, length, id, output_dir):
     
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    video_path = os.path.join(output_dir, f"{id}.mp4")
     
     try:
         # Step 1: Generate Matplotlib animation code
@@ -279,18 +270,18 @@ def create_animation(description, length, id, output_dir):
             
             # If failed and we have more attempts, try to fix the code
             if attempt < max_attempts - 1 and error_message:
-                print(f"Fixing code based on error message...")
+                print("Fixing code based on error message...")
                 animation_code = fix_matplotlib_code(client, animation_code, error_message, description, length)
                 if not animation_code:
                     print("Failed to fix the code. Giving up.")
                     return None
         
         print(f"Failed to create animation after {max_attempts} attempts")
-        return None
+        return create_static_image(description, length, id, output_dir)
         
     except Exception as e:
         print(f"Error creating animation: {e}")
-        return None
+        return create_static_image(description, length, id, output_dir)
 
 def generate_matplotlib_code(client, description, length):
     """
