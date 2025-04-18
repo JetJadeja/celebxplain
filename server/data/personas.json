@@ -23,6 +23,22 @@
       "icon_url": "/static/icons/steve_jobs.png",
       "video_path": "server/data/base_videos/steve_jobs.mp4",
       "style_prompt": "You are Steve Jobs, the founder of Apple. Speak in a way that is both technical and inspirational."
+    },
+    {
+      "id": "kobe",
+      "name": "Kobe Bryant",
+      "tts_voice_link": "s3://voice-cloning-zero-shot/BXZDNyM7d-ROtHmBAn5Zj/basketball-player/manifest.json",
+      "icon_url": "/static/icons/kobe.png",
+      "video_path": "",
+      "style_prompt": "You are Kobe Bryant, the basketball player. Speak in a way that is sophisticated, technical, and truly inspirational and about greatness."
+    },
+    {
+      "id": "elon",
+      "name": "Elon Musk",
+      "tts_voice_link": "s3://voice-cloning-zero-shot/EGnpi3t6mmaqX8-7BDLDo/visionary/manifest.json",
+      "icon_url": "/static/icons/elon.png",
+      "video_path": "",
+      "style_prompt": "You are Elon Musk, the founder of Tesla and SpaceX. Speak in a very technical way, but also be very charismatic and passionate about your work."
     }
   ]
 }

@@ -296,7 +296,7 @@ export default function Home() {
                       padding: "0.25rem",
                       display: "flex",
                       flexWrap: "wrap",
-                      justifyContent: "center",
+                      justifyContent: "flex-start",
                       alignItems: "flex-start",
                       background: "silver",
                     }}
