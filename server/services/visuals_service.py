@@ -9,6 +9,7 @@ import numpy as np
 import cv2
 from openai import OpenAI
 import subprocess
+import io
 
 
 class VisualSegment(BaseModel):
@@ -89,7 +90,6 @@ def create_static_image(description, length, id, output_dir):
     
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    image_path = os.path.join(output_dir, f"{id}.png")
     video_path = os.path.join(output_dir, f"{id}.mp4")
     
     try:
@@ -104,21 +104,22 @@ def create_static_image(description, length, id, output_dir):
         # Get the image URL
         image_url = response.data[0].url
         
-        # Download the image
+        # Download the image data
         image_data = requests.get(image_url).content
-        with open(image_path, "wb") as img_file:
-            img_file.write(image_data)
         
-        # Convert image to video
-        # Using PIL and numpy to create a video file
-        img = Image.open(image_path)
-        img = img.resize((1920, 1080))
+        # Load image directly from memory without saving to disk
+        img = Image.open(io.BytesIO(image_data))
+        
+        # Get image dimensions
+        width, height = img.size
+        
+        # Convert image to numpy array
         img_array = np.array(img)
         
         # Create a video writer
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         fps = 30
-        video = cv2.VideoWriter(video_path, fourcc, fps, (1920, 1080))
+        video = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
         
         # Write the same frame for the duration of the video
         for _ in range(int(fps * length)):
