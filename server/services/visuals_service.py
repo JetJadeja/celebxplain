@@ -68,7 +68,7 @@ def create_visual_plan(transcription):
     client = OpenAI(api_key=api_key)
     
     completion = client.beta.chat.completions.parse(
-        model="gpt-4o-2024-08-06",
+        model="o3-mini-2025-01-31",
         messages=[
             {"role": "system", "content": "Analyze this transcript and create a detailed visual plan for a video."},
             {"role": "user", "content": f"""
@@ -86,7 +86,7 @@ def create_visual_plan(transcription):
             It's crucial to remember that a person will already be narrating the content. Your task is to create a secondary, simple presentation next to them. Focus on illustrating on-paper concepts or topics suitable for 2D animations in the style of 3Blue1Brown.
             For example, use static images for straightforward visual references like, "Hey, look at this pool. Let's calculate the area of this pool." These should be simple and direct.
             Use animations specifically for visualizing mathematical concepts, such as illustrating the area under a curve for integration. Keep these animations simple and flat, emphasizing clarity and understanding over complexity.
-            Please ensure that your designs are clear, simple, and help convey mathematical ideas without unnecessary complexity. Our goal is to make the concepts accessible and easy to understand.
+            Please ensure that your designs are clear, simple, and help convey mathematical ideas without unnecessary complexity. Our goal is to make the concepts accessible and easy to understand. Try to have as many segments as possible.
             """}
         ],
         response_format=VisualPlan,
