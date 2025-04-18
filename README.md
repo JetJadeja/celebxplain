@@ -31,26 +31,26 @@ Generate videos of celebrities explaining any concept using AI. This project com
 
 2.  **Setup Backend (`server/`):**
     a. **Navigate to server directory:**
-    `bash
-cd server
-`
+    `  cd server
+   `
     b. **Create and activate Python virtual environment:**
-    `` bash
-    python3 -m venv venv
-    source venv/bin/activate
-
-    # On Windows use `venv\Scripts\activate`
-
-    ``c. **Install Python dependencies:**`bash
-    pip install -r ../requirements.txt
-    `d. **Configure Environment Variables:** Create a`.env`file in the`server/`directory (you can copy`.env.example`if it exists or create it manually) and add your API keys:`dotenv
+    `bash
+python3 -m venv venv
+source venv/bin/activate
+`
+    c. **Install Python dependencies:**
+    `bash
+pip install -r ../requirements.txt
+`
+    d. **Configure Environment Variables:** Create a `.env` file in the `server/` directory (you can copy `.env.example` if it exists or create it manually) and add your API keys:
+    `dotenv
     OPENAI_API_KEY=your_openai_api_key
     PLAYHT_TTS_USER=your_playht_user_id
     PLAYHT_TTS_API_KEY=your_playht_api_key
 
-    # Add any other required keys based on services used
+            # Add any other required keys based on services used
 
-    `e. **(Optional) Configure Celery Broker/Backend:** The default is Redis on`localhost:6379`. If your Redis server runs elsewhere, modify the `broker`and`backend`URLs in`server/celery_app.py`.
+            `e. **(Optional) Configure Celery Broker/Backend:** The default is Redis on`localhost:6379`. If your Redis server runs elsewhere, modify the `broker`and`backend`URLs in`server/celery_app.py`.
 
 3.  **Setup Frontend (`client/`):**
     a. **Navigate to client directory:**
