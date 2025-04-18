@@ -11,7 +11,6 @@ from openai import OpenAI
 import subprocess
 import io
 import tempfile
-import shutil
 import re
 
 
@@ -31,17 +30,36 @@ def create_explanatory_visuals(transcription, output_dir):
     print(visual_plan)
     
     # Ensure output directory exists
-    # os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     
-    # TODO: Implement visual creation using the plan
-    # visuals = create_visuals(visual_plan)
-    # final_video = assemble_visuals(visuals)
+    # Create visuals for each segment in the plan
+    segment_paths = []
+    for i, segment in enumerate(visual_plan.segments):
+        segment_id = f"segment_{i}"
+        segment_length = segment.end_time - segment.start_time
+        
+        print(f"Creating {segment.type} for segment {i+1}/{len(visual_plan.segments)}: {segment.description[:50]}...")
+        
+        if segment.type == "animation":
+            video_path = create_animation(segment.description, segment_length, segment_id, output_dir)
+        else:  # segment.type == "image"
+            video_path = create_static_image(segment.description, segment_length, segment_id, output_dir)
+        
+        if video_path:
+            segment_paths.append((video_path, segment.start_time, segment.end_time))
+            print(f"Successfully created {segment.type} at {video_path}")
+        else:
+            print(f"Failed to create {segment.type} for segment {i+1}")
     
-    # For now, let's just save the visual plan
-    # with open(os.path.join(output_dir, "visual_plan.json"), "w") as f:
-    #     f.write(visual_plan.model_dump_json(indent=2))
+    # Assemble the visuals into a final video
+    final_video = assemble_visuals(segment_paths, output_dir)
     
-    return visual_plan
+    # Save the visual plan for reference
+    plan_path = os.path.join(output_dir, "visual_plan.json")
+    with open(plan_path, "w") as f:
+        f.write(visual_plan.model_dump_json(indent=2))
+    
+    return final_video
 
 # Create the visual plan
 def create_visual_plan(transcription):
@@ -80,9 +98,81 @@ def create_visual_plan(transcription):
 def create_visuals(visual_plan):
     pass
 
-# Assemble the visuals into a final video
-def assemble_visuals(visuals):
-    pass
+# Assemble the visuals into a final supporting video
+def assemble_visuals(segment_paths, output_dir):
+    """
+    Assembles individual video segments into a final video using a simpler approach.
+    
+    Args:
+        segment_paths: List of tuples (path, start_time, end_time)
+        output_dir: Directory to save the final video
+        
+    Returns:
+        Path to the final assembled video or None if failed
+    """
+    if not segment_paths:
+        print("No segments to assemble")
+        return None
+    
+    try:
+        # Find the end time of the last segment
+        max_end_time = max([end_time for _, _, end_time in segment_paths])
+        
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # First, create a blank background video
+            background_path = os.path.join(temp_dir, "background.mp4")
+            bg_cmd = [
+                "ffmpeg",
+                "-f", "lavfi",
+                "-i", f"color=c=black:s=1920x1080:r=30:d={max_end_time}",
+                "-c:v", "libx264",
+                "-y",
+                background_path
+            ]
+            
+            subprocess.run(bg_cmd, capture_output=True, check=False)
+            
+            # Then add each segment one by one
+            current_video = background_path
+            
+            for i, (path, start_time, end_time) in enumerate(segment_paths):
+                # Output for this step
+                output_path = os.path.join(temp_dir, f"step_{i}.mp4")
+                
+                # Overlay the segment at the right time
+                overlay_cmd = [
+                    "ffmpeg",
+                    "-i", current_video,
+                    "-i", path,
+                    "-filter_complex", f"[0:v][1:v]overlay=eof_action=pass:enable='between(t,{start_time},{end_time})'",
+                    "-c:v", "libx264",
+                    "-preset", "medium",
+                    "-y",
+                    output_path
+                ]
+                
+                subprocess.run(overlay_cmd, capture_output=True, check=False)
+                
+                if os.path.exists(output_path):
+                    current_video = output_path
+                else:
+                    print(f"Failed to add segment {i}")
+            
+            # Final output
+            final_path = os.path.join(output_dir, "final_video.mp4")
+            
+            # Copy the last step to the final output
+            shutil.copy(current_video, final_path)
+            
+            print(f"Successfully created final video at {final_path}")
+            return final_path
+            
+    except Exception as e:
+        import traceback
+        print(f"Error assembling visuals: {e}")
+        traceback.print_exc()
+        return None
 
 # Create static image for video
 def create_static_image(description, length, id, output_dir):
