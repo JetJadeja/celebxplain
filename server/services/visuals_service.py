@@ -172,7 +172,7 @@ def create_animation(description, length, id, output_dir):
             return None
         
         # Step 2: Try-Fix-Retry loop
-        max_attempts = 3
+        max_attempts = 5
         for attempt in range(max_attempts):
             print(f"Attempt {attempt+1}/{max_attempts} to execute animation code")
             
