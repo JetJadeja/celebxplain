@@ -31,8 +31,9 @@ Generate videos of celebrities explaining any concept using AI. This project com
 
 2.  **Setup Backend (`server/`):**
     a. **Navigate to server directory:**
-    `  cd server
-   `
+    `bash
+cd server
+`
     b. **Create and activate Python virtual environment:**
     `bash
 python3 -m venv venv
@@ -48,9 +49,9 @@ pip install -r ../requirements.txt
     PLAYHT_TTS_USER=your_playht_user_id
     PLAYHT_TTS_API_KEY=your_playht_api_key
 
-            # Add any other required keys based on services used
+    # Add any other required keys based on services used
 
-            `e. **(Optional) Configure Celery Broker/Backend:** The default is Redis on`localhost:6379`. If your Redis server runs elsewhere, modify the `broker`and`backend`URLs in`server/celery_app.py`.
+    `e. **(Optional) Configure Celery Broker/Backend:** The default is Redis on`localhost:6379`. If your Redis server runs elsewhere, modify the `broker`and`backend`URLs in`server/celery_app.py`.
 
 3.  **Setup Frontend (`client/`):**
     a. **Navigate to client directory:**
