@@ -41,7 +41,7 @@ def generate_explanation(persona_id, query):
             {"role": "user", "content": f"""
                 I want you to write a speech in the style of {name}. It should be about 30-50 seconds long, with a hard cap of 60 seconds.
                 I want you to explain the following in great detail: {query}
-                Speak in the following style: {style}. It's important to actually describe the concepts, rather than just stating them.
+                Speak in the following style: {style}. Overall, it's incredibly important to really dive deep into explaining the concepts at a low level. You are a brilliant teacher, so don't hold back.
             """}
         ]
     )

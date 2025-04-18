@@ -177,51 +177,82 @@ def create_static_image(description, length, id, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     video_path = os.path.join(output_dir, f"{id}.mp4")
     
+    num_images = 3
+    image_arrays_bgr = []
+    width, height = 1024, 1024 # Assuming DALL-E 3 size
+
     try:
-        # Generate image using DALL-E
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=description,
-            n=1,
-            size="1024x1024",
-        )
-        
-        # Get the image URL
-        image_url = response.data[0].url
-        
-        # Download the image data
-        image_data = requests.get(image_url).content
-        
-        # Load image directly from memory without saving to disk
-        img = Image.open(io.BytesIO(image_data))
-        
-        # Get image dimensions
-        width, height = img.size
-        
-        # Convert image to numpy array
-        img_array = np.array(img)
-        
+        # Generate three images using DALL-E
+        print(f"Generating {num_images} images for '{description[:30]}...'")
+        for i in range(num_images):
+            print(f"Generating image {i+1}/{num_images}...")
+            response = client.images.generate(
+                model="dall-e-3",
+                # Add a small variation to the prompt for diversity, if desired
+                prompt=f"{description} (variation {i+1})", 
+                n=1,
+                size="1024x1024", 
+            )
+            
+            # Get the image URL
+            image_url = response.data[0].url
+            
+            # Download the image data
+            image_data = requests.get(image_url).content
+            
+            # Load image directly from memory
+            img = Image.open(io.BytesIO(image_data))
+            
+            # Get image dimensions (use the first image's dimensions for the video)
+            if i == 0:
+                width, height = img.size
+            
+            # Convert image to numpy array
+            img_array = np.array(img.resize((width, height))) # Ensure consistent size
+            
+            # Convert RGB to BGR (OpenCV uses BGR)
+            if len(img_array.shape) == 3 and img_array.shape[2] == 3:
+                frame_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+            elif len(img_array.shape) == 3 and img_array.shape[2] == 4: # Handle RGBA
+                 frame_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGBA2BGR)
+            else: # Grayscale or other format
+                 frame_bgr = cv2.cvtColor(img_array, cv2.COLOR_GRAY2BGR)
+                 
+            image_arrays_bgr.append(frame_bgr)
+
+        if not image_arrays_bgr:
+             raise ValueError("No images were generated.")
+
         # Create a video writer
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         fps = 30
         video = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
         
-        # Write the same frame for the duration of the video
-        for _ in range(int(fps * length)):
-            # Convert RGB to BGR (OpenCV uses BGR)
-            if len(img_array.shape) == 3 and img_array.shape[2] == 3:
-                frame = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-            else:
-                frame = img_array
-            video.write(frame)
+        # Calculate frames per image segment
+        total_frames = int(fps * length)
+        frames_per_image = total_frames // num_images
+        # Ensure total frames match by adding remainder to the last image
+        remainder_frames = total_frames % num_images 
+        
+        print(f"Writing video segments: {frames_per_image} frames per image ({remainder_frames} extra for last image).")
+
+        # Write the frames for each image sequentially
+        for i, frame in enumerate(image_arrays_bgr):
+            current_frames = frames_per_image
+            if i == num_images - 1: # Add remainder to the last segment
+                current_frames += remainder_frames
+                
+            for _ in range(current_frames):
+                video.write(frame)
         
         video.release()
         
-        print(f"Created static image video at {video_path}")
+        print(f"Created static image video with {num_images} segments at {video_path}")
         return video_path
     
     except Exception as e:
-        print(f"Error creating static image: {e}")
+        print(f"Error creating static image sequence: {e}")
+        # Fallback or return None
         return None
 
 # Create an animation
