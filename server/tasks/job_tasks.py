@@ -8,8 +8,9 @@ from celery import shared_task
 from utils.db import update_job_status
 from services.llm_service import generate_explanation
 from services.tts_service import generate_speech
-from services.sieve_service import create_celebrity_video, create_explanatory_visuals
+from services.sieve_service import create_celebrity_video
 from services.video_service import assemble_final_video
+from services.visuals_service import create_explanatory_visuals
 
 @shared_task
 def process_job(job_id, persona_id, query):

@@ -1,5 +1,4 @@
 import os
-import time
 import json
 import sieve
 
@@ -49,63 +48,6 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
         print(f"Error creating celebrity video: {e}")
         # Return a placeholder in case of error
         return os.path.join('server', 'data', 'placeholder_celebrity.mp4')
-
-def create_explanatory_visuals(transcription):
-    """Create explanatory visuals based on transcription data"""
-    try:
-        print("Creating explanatory visuals from transcription...")
-        
-        # Create output directory for visuals
-        output_dir = os.path.join('server', 'data', 'visuals')
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # Extract word timings from transcription
-        word_timings = []
-        if transcription and not isinstance(transcription, dict) or not transcription.get('error'):
-            # Extract word timing information based on the structure of transcription data
-            if isinstance(transcription, list) and len(transcription) > 0 and 'words' in transcription[0]:
-                word_timings = transcription[0]['words']
-                print(f"Extracted {len(word_timings)} word timings from transcription")
-        
-        # TODO: Implement actual visuals generation using Sieve or other services
-        # For now, return placeholder visuals
-        
-        # Generate placeholder visuals based on word timings
-        visual_elements = []
-        
-        # Create some placeholder visuals - in real implementation, these would be generated based on content
-        visual_elements = [
-            {
-                "type": "image",
-                "path": os.path.join(output_dir, 'visual_1.png'),
-                "start_time": 1.0,
-                "end_time": 3.0
-            },
-            {
-                "type": "image",
-                "path": os.path.join(output_dir, 'visual_2.png'),
-                "start_time": 3.5,
-                "end_time": 6.0
-            }
-        ]
-        
-        # Simulate processing time
-        time.sleep(1)
-        
-        print(f"Created {len(visual_elements)} visual elements")
-        return visual_elements
-        
-    except Exception as e:
-        print(f"Error creating explanatory visuals: {e}")
-        # Return minimal placeholder visuals in case of error
-        return [
-            {
-                "type": "image",
-                "path": os.path.join('server', 'data', 'placeholder_visual_1.png'),
-                "start_time": 1.0,
-                "end_time": 3.0
-            }
-        ]
 
 def transcribe_audio_file(audio_file_path):
     """Helper function to transcribe audio using Sieve API"""
