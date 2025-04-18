@@ -39,12 +39,12 @@ def process_job(job_id, persona_id, query):
         update_job_status(job_id, "processing", "Generating visuals content")
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             # Launch both tasks simultaneously
-            # celeb_task = executor.submit(
-            #     create_celebrity_video,
-            #     persona_id,
-            #     speech_file,
-            #     results_dir
-            # )
+            celeb_task = executor.submit(
+                create_celebrity_video,
+                persona_id,
+                speech_file,
+                results_dir
+            )
             
             visuals_task = executor.submit(
                 create_explanatory_visuals,
@@ -52,7 +52,7 @@ def process_job(job_id, persona_id, query):
             )
             
             # Wait for both to complete
-            # celeb_video = celeb_task.result()
+            celeb_video = celeb_task.result()
             visual_elements = visuals_task.result()
             update_job_status(job_id, "processing", "Generated visuals")
         

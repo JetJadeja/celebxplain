@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import sieve
 
 def create_celebrity_video(persona_id, audio_file, output_dir):
@@ -16,7 +17,7 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
             print(f"Warning: Base video not found for persona {persona_id}, using placeholder")
             return os.path.join('server', 'data', 'placeholder_celebrity.mp4')
         
-        # Output video path - use fixed filename
+        # Define the desired output video path
         output_video = os.path.join(output_dir, "lip_synced_video.mp4")
         
         # Create Sieve file objects
@@ -26,8 +27,9 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
         # Get the lipsync function
         lipsync = sieve.function.get("sieve/lipsync")
         
-        # Call the lipsync function
-        job = lipsync.push(
+        # Call the lipsync function synchronously
+        print("Running lipsync job...")
+        result_file = lipsync.run(
             file=video_file,
             audio=audio_file_obj,
             backend="sievesync-1.1",
@@ -36,13 +38,29 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
             downsample=False,
             cut_by="audio"
         )
-        
-        # Wait for the result
-        print("Waiting for lipsync job to complete...")
-        result = job.result()
-        
-        # Save the result to the output path
-        return result
+        print("Lipsync job completed.")
+
+        # Access .path to trigger download and get the temporary local path
+        print(f"Accessing local path for result file...")
+        temp_local_path = result_file.path 
+        print(f"File downloaded/available at: {temp_local_path}")
+
+        # Copy the file from the temp path to the desired output path
+        print(f"Copying file to {output_video}...")
+        shutil.copy(temp_local_path, output_video)
+        print("Copy complete.")
+
+        # Clean up the temporary file downloaded by Sieve
+        try:
+            print(f"Deleting temporary file: {temp_local_path}")
+            os.remove(temp_local_path)
+            print("Temporary file deleted.")
+        except OSError as e:
+            # Log if deletion fails, but don't crash the main process
+            print(f"Warning: Could not delete temporary file {temp_local_path}: {e}")
+
+        # Return the *local path* of the copied file
+        return output_video
     
     except Exception as e:
         print(f"Error creating celebrity video: {e}")
