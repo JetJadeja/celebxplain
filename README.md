@@ -1,6 +1,6 @@
 # CelebXplain
 
-Generate videos of celebrities explaining any concept using AI. This project combines a Next.js frontend with a Python (Flask) backend, utilizing Celery for background task processing (video generation) and Redis as the message broker and result backend. AI services like OpenAI (for script generation) and PlayHT (for text-to-speech) are integrated to create the final video, potentially using Manim for animations.
+Generate videos of celebrities explaining any concept using AI. This application takes a user-provided concept and a chosen celebrity, then leverages artificial intelligence to create a short video where the celebrity appears to explain that concept. The process involves generating a script, synthesizing the celebrity's voice, and using Sieve for video processing to create the final output.
 
 ## Project Overview
 
@@ -150,27 +150,3 @@ flask run
 # By default, it runs on http://127.0.0.1:5000
 
 ```
-
-### 4. **Start the Frontend Server (Next.js):**
-
-- Open a new terminal in the project root.
-
-- Navigate to the `client` directory:
-
-```bash
-
-cd client
-
-```
-
-- Start the Next.js development server:
-
-```bash
-
-yarn dev
-
-```
-
-- Open your browser to the address provided (`http://localhost:3000`).
-
-Now you should be able to access the CelebXplain application in your browser and generate videos!
