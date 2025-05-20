@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { GroupBox, Button, TextInput, Frame } from "react95";
+// import { GroupBox, Button, TextInput, Frame } from "react95"; // Old React95 imports
 import { useJob } from "@/lib/job-context";
 import { useParams } from "next/navigation";
 import {
@@ -14,6 +14,19 @@ import {
   Video,
 } from "lucide-react";
 
+// Shadcn UI Imports
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
 interface JobResultProps {
   onReset: () => void;
 }
@@ -22,53 +35,50 @@ interface JobResultProps {
 const getStatusIcon = (status?: string) => {
   const lowerStatus = status?.toLowerCase() || "";
   if (lowerStatus.includes("complete"))
-    return <CheckCircle size={16} className="mr-2" />;
+    return <CheckCircle size={16} className="mr-2 text-green-500" />;
   if (lowerStatus.includes("fail"))
-    return <AlertCircle size={16} className="mr-2 text-red-600" />;
+    return <AlertCircle size={16} className="mr-2 text-red-500" />;
   if (lowerStatus.includes("error"))
-    return <AlertCircle size={16} className="mr-2 text-red-600" />;
+    return <AlertCircle size={16} className="mr-2 text-red-500" />;
   if (lowerStatus.includes("processing"))
-    return <Loader size={16} className="mr-2 animate-spin-slow" />;
+    return <Loader size={16} className="mr-2 animate-spin" />;
   if (lowerStatus.includes("created"))
-    return <FilePlus size={16} className="mr-2" />;
+    return <FilePlus size={16} className="mr-2 text-blue-500" />;
   if (lowerStatus.includes("generating speech"))
-    return <MessageSquare size={16} className="mr-2" />;
+    return <MessageSquare size={16} className="mr-2 text-indigo-500" />;
   if (lowerStatus.includes("generating visuals"))
-    return <Clapperboard size={16} className="mr-2" />;
+    return <Clapperboard size={16} className="mr-2 text-purple-500" />;
   // Default or other statuses
-  return <Loader size={16} className="mr-2 animate-spin-slow" />;
+  return <Loader size={16} className="mr-2 animate-spin" />;
 };
 
-// Helper function to render updates timeline (Enhanced)
+// Helper function to render updates timeline (Enhanced for Shadcn)
 const UpdatesTimeline = React.memo(
-  ({
-    updates,
-    title = "Job Updates", // Default title
-  }: {
-    updates: any[];
-    title?: string;
-  }) => {
+  ({ updates, title = "Job Updates" }: { updates: any[]; title?: string }) => {
     if (!updates || updates.length === 0) return null;
 
     return (
-      <GroupBox label={title} className="w-full mt-4">
-        <Frame variant="well" className="p-2 bg-white shadow-inner">
+      <Card className="w-full mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
           {updates.length > 0 ? (
-            <div className="space-y-1 text-sm">
+            <div className="space-y-1 text-sm px-6 pb-6">
               {updates.map((update, index) => (
                 <div
                   key={update.id || index}
-                  className="flex items-start p-1 border-b border-gray-200 last:border-b-0"
+                  className="flex items-start p-3 border-b last:border-b-0"
                 >
-                  <div className="flex-shrink-0 mt-0.5">
+                  <div className="flex-shrink-0 mt-1">
                     {getStatusIcon(update.status)}
                   </div>
-                  <div className="flex-grow">
+                  <div className="flex-grow ml-3">
                     <div className="flex justify-between items-center">
                       <span className="font-medium capitalize">
                         {update.status}
                       </span>
-                      <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                         {new Date(update.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -76,34 +86,39 @@ const UpdatesTimeline = React.memo(
                         })}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-700 mt-0.5">
-                      {update.message}
-                    </p>
+                    {update.message && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {update.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 text-center p-4">
+            <p className="text-sm text-muted-foreground text-center p-6">
               No updates yet...
             </p>
           )}
-        </Frame>
-      </GroupBox>
+        </CardContent>
+      </Card>
     );
   }
 );
 UpdatesTimeline.displayName = "UpdatesTimeline";
 
-// Helper function to display job ID (using default TextInput)
+// Helper function to display job ID (using Shadcn Input)
 const JobIdDisplay = ({ id }: { id?: string }) => {
   if (!id) return null;
   return (
-    <div className="flex items-center mt-1">
-      <label htmlFor="jobIdInput" className="text-xs mr-2 whitespace-nowrap">
+    <div className="flex items-center mt-2">
+      <label
+        htmlFor="jobIdInput"
+        className="text-sm mr-2 whitespace-nowrap font-medium"
+      >
         Job ID:
       </label>
-      <TextInput id="jobIdInput" value={id} readOnly fullWidth />
+      <Input id="jobIdInput" value={id} readOnly className="text-sm" />
     </div>
   );
 };
@@ -112,146 +127,163 @@ export function JobResult({ onReset }: JobResultProps) {
   const { job, jobStatus, loading, error } = useJob();
   const params = useParams();
 
-  // Get job ID from route params or job objects
   const jobId = (params.jobId as string) || jobStatus?.job_id || job?.job_id;
-
-  // Extract updates from job object safely
   const jobUpdates = job?.updates || [];
 
-  // --- Render Logic for different states ---
-
-  // If we're loading before a job is created
+  // Loading state
   if (loading && !jobStatus) {
     return (
-      <GroupBox label="Loading..." className="w-full max-w-2xl mx-auto p-4">
-        <Frame variant="well" className="p-3 text-center">
-          <p className="text-sm">Retrieving job details...</p>
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Loading...</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <div className="flex items-center justify-center mb-3">
+            <Loader size={24} className="mr-2 animate-spin" />
+            <p className="text-muted-foreground">Retrieving job details...</p>
+          </div>
           <JobIdDisplay id={jobId} />
-        </Frame>
-      </GroupBox>
+        </CardContent>
+      </Card>
     );
   }
 
-  // If we encountered an error
+  // Error state
   if (error) {
     return (
-      <GroupBox
-        label="Error"
-        className="w-full max-w-2xl mx-auto p-4 border-2 border-red-500 shadow-md"
-      >
-        <Frame variant="well" className="p-3 mb-3 bg-red-100">
-          <div className="flex items-center text-red-800 mb-2">
-            <AlertCircle size={18} className="mr-2 flex-shrink-0" />
-            <p className="font-semibold">
-              We encountered a problem retrieving the job details.
-            </p>
+      <Card className="w-full max-w-2xl mx-auto border-destructive">
+        <CardHeader>
+          <div className="flex items-center text-destructive">
+            <AlertCircle size={20} className="mr-2 flex-shrink-0" />
+            <CardTitle>Error</CardTitle>
           </div>
-          <p className="text-sm text-red-700 mb-2">{error}</p>
+          <CardDescription className="text-destructive">
+            We encountered a problem retrieving the job details.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive mb-3">{error}</p>
           <JobIdDisplay id={jobId} />
-        </Frame>
-        <Button onClick={onReset} fullWidth>
-          Try Again
-        </Button>
-      </GroupBox>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={onReset} variant="outline" className="w-full">
+            Try Again
+          </Button>
+        </CardFooter>
+      </Card>
     );
   }
 
-  // If the job failed
+  // Job failed state
   if (jobStatus?.status === "failed" || jobStatus?.status === "error") {
     return (
-      <GroupBox
-        label="Generation Failed"
-        className="w-full max-w-2xl mx-auto p-4 border-2 border-red-500 shadow-md"
-      >
-        <Frame variant="well" className="p-3 mb-3 bg-red-100">
-          <div className="flex items-center text-red-800 mb-2">
-            <AlertCircle size={18} className="mr-2 flex-shrink-0" />
-            <p className="font-semibold">
-              We couldn't generate your explanation.
-            </p>
+      <Card className="w-full max-w-2xl mx-auto border-destructive">
+        <CardHeader>
+          <div className="flex items-center text-destructive">
+            <AlertCircle size={20} className="mr-2 flex-shrink-0" />
+            <CardTitle>Generation Failed</CardTitle>
           </div>
-          <p className="text-sm text-red-700 mb-2">
+          <CardDescription className="text-destructive">
+            We couldn't generate your explanation.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive mb-1">
             Reason: {jobStatus.error || "Unknown error occurred"}
           </p>
           <JobIdDisplay id={jobId} />
-        </Frame>
-
-        <UpdatesTimeline updates={jobUpdates} title="Attempt Details" />
-        <Button onClick={onReset} fullWidth className="mt-4">
-          Try Again
-        </Button>
-      </GroupBox>
+          <UpdatesTimeline updates={jobUpdates} title="Attempt Details" />
+        </CardContent>
+        <CardFooter>
+          <Button onClick={onReset} variant="outline" className="w-full mt-4">
+            Try Again
+          </Button>
+        </CardFooter>
+      </Card>
     );
   }
 
-  // If the job completed successfully
+  // Job completed successfully
   if (jobStatus?.status === "completed" && jobStatus.result) {
     return (
-      <GroupBox
-        label="Your Explanation is Ready!"
-        className="w-full max-w-2xl mx-auto p-4"
-      >
-        <Frame variant="well" className="p-3 mb-3 bg-green-100">
-          <div className="flex items-center text-green-800 mb-2">
-            <CheckCircle size={18} className="mr-2 flex-shrink-0" />
-            <p className="font-semibold">Explanation generated successfully!</p>
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <div className="flex items-center text-green-600">
+            <CheckCircle size={20} className="mr-2 flex-shrink-0" />
+            <CardTitle>Your Explanation is Ready!</CardTitle>
           </div>
+          <CardDescription>Explanation generated successfully!</CardDescription>
+        </CardHeader>
+        <CardContent>
           <JobIdDisplay id={jobId} />
-        </Frame>
 
-        {/* Video Placeholder */}
-        <Frame
-          variant="field"
-          className="mb-4 p-4 h-40 flex items-center justify-center bg-gray-200"
-        >
-          <Video size={40} className="text-gray-500 mr-2" />
-          <p className="text-gray-600">(Video Playback Area)</p>
-        </Frame>
+          {/* Video Placeholder - Styled with Tailwind */}
+          <div className="my-6 p-4 h-48 flex flex-col items-center justify-center bg-muted/30 border border-dashed rounded-lg">
+            <Video size={40} className="text-muted-foreground mb-2" />
+            <p className="text-muted-foreground text-sm">
+              (Video Playback Area)
+            </p>
+          </div>
 
-        {/* Result Text */}
-        <GroupBox label="Generated Explanation Text" className="mb-4">
-          <Frame variant="well" className="p-1 bg-white">
-            <TextInput
+          {/* Result Text using Shadcn Textarea */}
+          <div className="mb-6">
+            <label
+              htmlFor="explanationText"
+              className="block text-sm font-medium mb-1"
+            >
+              Generated Explanation Text
+            </label>
+            <Textarea
+              id="explanationText"
               value={jobStatus.result}
               readOnly
-              rows={8} // Adjusted rows
-              fullWidth
-              multiline
+              rows={10}
+              className="w-full text-sm bg-background"
             />
-          </Frame>
-        </GroupBox>
+          </div>
 
-        <UpdatesTimeline updates={jobUpdates} title="Generation Timeline" />
-        <Frame className="flex gap-2 mt-4 p-1 justify-end">
-          <Button onClick={onReset}>Generate Another</Button>
+          <UpdatesTimeline updates={jobUpdates} title="Generation Timeline" />
+        </CardContent>
+        <CardFooter className="flex justify-end gap-2 pt-4">
+          <Button onClick={onReset} variant="outline">
+            Generate Another
+          </Button>
           <Button disabled>Share This</Button>
-        </Frame>
-      </GroupBox>
+        </CardFooter>
+      </Card>
     );
   }
 
-  // Default case: job is processing or being fetched
+  // Default case: job is processing
   return (
-    <GroupBox
-      label="Working on your explanation"
-      className="w-full max-w-2xl mx-auto p-4"
-    >
-      {/* Status and ID Section - Added w-full */}
-      <Frame variant="well" className="p-3 mb-3 w-full">
-        <div className="flex items-center mb-2">
-          <Loader size={18} className="mr-2 animate-spin-slow" />
-          <span className="font-semibold">
-            Status: {jobStatus?.status || job?.status || "Processing"}
-          </span>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <div className="flex items-center">
+          <Loader size={20} className="mr-2 animate-spin" />
+          <CardTitle>Working on your explanation</CardTitle>
         </div>
+        <CardDescription>
+          Status: {jobStatus?.status || job?.status || "Processing..."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <JobIdDisplay id={jobId} />
-        <p className="text-xs text-gray-600 mt-2">
-          Your request is being processed. Please be patient.
+        <p className="text-sm text-muted-foreground mt-3">
+          Your request is being processed. Please be patient. This might take a
+          few moments.
         </p>
-      </Frame>
-
-      {/* Updates Timeline */}
-      <UpdatesTimeline updates={jobUpdates} />
-    </GroupBox>
+        <UpdatesTimeline updates={jobUpdates} title="Current Progress" />
+      </CardContent>
+      <CardFooter>
+        <Button
+          onClick={onReset}
+          variant="outline"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? "Processing..." : "Cancel / Reset"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

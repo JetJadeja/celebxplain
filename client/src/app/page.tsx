@@ -1,409 +1,211 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useJob } from "@/lib/job-context";
-import { fetchPersonas, type Celebrity } from "@/lib/api";
-import {
-  Window,
-  WindowHeader,
-  WindowContent,
-  Button as R95Button,
-  TextInput,
-  GroupBox,
-  Frame,
-  ProgressBar,
-} from "react95";
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Brain, Zap, User, Wand2, Film } from "lucide-react"; // Added User, Wand2, Film
 
-// --- Celebrity Card Component ---
-interface CelebrityCardProps {
-  celebrity: Celebrity;
-  isSelected: boolean;
-  onSelect: (celebrity: Celebrity) => void;
-  disabled: boolean;
-}
-
-const CelebrityCard: React.FC<CelebrityCardProps> = ({
-  celebrity,
-  isSelected,
-  onSelect,
-  disabled,
-}) => {
+export default function LandingPage() {
   return (
-    <GroupBox
-      label={celebrity.name}
-      style={{
-        width: "200px",
-        textAlign: "center",
-        margin: "0.5rem",
-        padding: "0.5rem",
-        paddingTop: "1.5rem",
-        boxShadow: isSelected
-          ? "inset 2px 2px 4px rgba(0,0,0,0.3)"
-          : "2px 2px 4px rgba(0,0,0,0.2)",
-        border: isSelected ? "1px solid gray" : "1px solid silver",
-      }}
-    >
-      <Image
-        src={celebrity.image}
-        alt={celebrity.name}
-        width={80}
-        height={80}
-        style={{
-          borderRadius: "50%",
-          marginBottom: "0.75rem",
-          border: "1px solid silver",
-          display: "inline-block",
-        }}
-      />
-      <R95Button
-        onClick={() => onSelect(celebrity)}
-        disabled={disabled}
-        fullWidth
-      >
-        Select
-      </R95Button>
-    </GroupBox>
-  );
-};
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      {/* Header */}
+      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Brain className="h-8 w-8 text-purple-400" />
+          <h1 className="text-2xl font-bold tracking-tight">
+            Celeb<span className="text-purple-400">X</span>plain
+          </h1>
+        </div>
+        <nav className="space-x-4">
+          <Link href="/dashboard" legacyBehavior>
+            <Button
+              variant="outline"
+              className="text-white border-purple-500 hover:bg-purple-600 hover:border-purple-600"
+            >
+              Dashboard
+            </Button>
+          </Link>
+          <Link href="/dashboard" legacyBehavior>
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </nav>
+      </header>
 
-// Process Steps Component using Frame
-const R95ProcessSteps = ({
-  steps,
-}: {
-  steps: { title: string; description: string; icon: React.ReactNode }[];
-}) => {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-around",
-        gap: "0.75rem",
-        padding: "0.5rem 0.25rem",
-      }}
-    >
-      {steps.map((step, index) => (
-        <Frame
-          key={index}
-          variant="well"
-          style={{
-            padding: "0.75rem 0.5rem",
-            textAlign: "center",
-            flex: 1,
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.5rem",
-              marginBottom: "0.5rem",
-              fontFamily: "monospace",
-            }}
-          >
-            {step.icon}
+      {/* Hero Section */}
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center py-16 sm:py-24">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center justify-center bg-purple-500/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+            <Zap className="h-4 w-4 mr-2" />
+            Unlock a New Way of Learning
           </div>
-          <h3
-            style={{
-              fontWeight: "bold",
-              fontSize: "0.9rem",
-              marginBottom: "0.3rem",
-            }}
-          >
-            {step.title}
-          </h3>
-          <p style={{ fontSize: "0.8rem" }}>{step.description}</p>
-        </Frame>
-      ))}
-    </div>
-  );
-};
-
-export default function Home() {
-  const [selectedCelebrity, setSelectedCelebrity] = useState<Celebrity | null>(
-    null
-  );
-  const [topic, setTopic] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
-  const [loadingCelebrities, setLoadingCelebrities] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const { clearJob, createNewJob } = useJob();
-  const router = useRouter();
-
-  // Fetch celebrities on mount
-  useEffect(() => {
-    const loadCelebrities = async () => {
-      try {
-        setLoadingCelebrities(true);
-        setLoadError(null);
-        const data = await fetchPersonas();
-        setCelebrities(data);
-      } catch (err) {
-        setLoadError(
-          err instanceof Error ? err.message : "Failed to load celebrities"
-        );
-        console.error("Error loading celebrities:", err);
-      } finally {
-        setLoadingCelebrities(false);
-      }
-    };
-    loadCelebrities();
-  }, []);
-
-  const handleGenerate = async () => {
-    if (!selectedCelebrity || !topic || isSubmitting) return;
-    setIsSubmitting(true);
-    setLoadError(null);
-    try {
-      clearJob();
-      const newJob = await createNewJob(topic, selectedCelebrity.id);
-      router.push(`/results/${newJob.job_id}`);
-    } catch (error) {
-      console.error("Error creating job:", error);
-      setLoadError("Failed to start explanation generation. Please try again.");
-      setIsSubmitting(false);
-    }
-  };
-
-  // Define steps with placeholder icons (replace with actual icons if available)
-  const steps = [
-    {
-      title: "Select & Topic",
-      description: "Choose who explains",
-      icon: "[1]",
-    },
-    {
-      title: "AI Generates",
-      description: "Personalized script",
-      icon: "[2]",
-    },
-    {
-      title: "Watch Video",
-      description: "Enjoy your explanation",
-      icon: "[3]",
-    },
-  ];
-
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "teal",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-      }}
-    >
-      <Window
-        style={{
-          width: "95%",
-          height: "90vh",
-          maxWidth: "1000px",
-          maxHeight: "800px",
-          margin: "auto",
-        }}
-      >
-        <WindowHeader>Celebrity Explainer Generator</WindowHeader>
-        <WindowContent
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "calc(100% - 28px)",
-            padding: "0.25rem",
-          }}
-        >
-          {/* --- Header Text --- */}
-          <div
-            style={{
-              maxWidth: "960px",
-              margin: "0 auto",
-              display: "flex",
-              flexDirection: "column",
-              flexGrow: 1,
-            }}
-          >
-            <div
-              style={{ textAlign: "center", padding: "0.25rem 0 0.75rem 0" }}
-            >
-              <h1
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  marginBottom: "0.3rem",
-                }}
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
+            Learn Anything, <br />
+            Explained by Your{" "}
+            <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
+              Favorite Stars
+            </span>
+            .
+          </h2>
+          <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+            Ever wished learning complex topics was as entertaining as watching
+            your favorite celebrity? Now it can be. CelebXplain uses AI to
+            generate unique video explanations in the style of well-known
+            personalities.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <Link href="/dashboard" legacyBehavior>
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg py-3 px-8 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105"
               >
-                Celebrity Explainer Generator
-              </h1>
-              <p>Learn anything, explained by your favorite celebrities</p>
-            </div>
-
-            {/* --- Celebrity Selection Area --- */}
-            <GroupBox
-              label="1. Choose a Celebrity"
-              style={{ marginBottom: "0.5rem" }}
-            >
-              {(() => {
-                // Use standard if/else if/else for clarity
-                if (loadingCelebrities) {
-                  return (
-                    <Frame
-                      variant="well"
-                      style={{
-                        padding: "1rem",
-                        textAlign: "center",
-                        height: "200px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <p style={{ marginBottom: "1rem" }}>
-                        Loading celebrities...
-                      </p>
-                      <ProgressBar style={{ width: "90%" }} />
-                    </Frame>
-                  );
+                Start Creating Now <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto text-white border-purple-500 hover:bg-purple-500/20 hover:text-purple-300 text-lg py-3 px-8 rounded-lg shadow-lg"
+              onClick={() => {
+                const featuresSection = document.getElementById("features");
+                if (featuresSection) {
+                  featuresSection.scrollIntoView({ behavior: "smooth" });
                 }
-
-                if (loadError && !celebrities.length) {
-                  return (
-                    <Frame
-                      variant="well"
-                      style={{
-                        padding: "1rem",
-                        color: "red",
-                        textAlign: "center",
-                        height: "200px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <p>Error loading celebrities: {loadError}</p>
-                    </Frame>
-                  );
-                }
-
-                // Default case: display celebrities
-                return (
-                  <div
-                    style={{
-                      height: "260px",
-                      overflowY: "auto",
-                      padding: "0.25rem",
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "flex-start",
-                      alignItems: "flex-start",
-                      background: "silver",
-                    }}
-                  >
-                    {celebrities.map((celeb) => (
-                      <CelebrityCard
-                        key={celeb.id}
-                        celebrity={celeb}
-                        isSelected={selectedCelebrity?.id === celeb.id}
-                        onSelect={setSelectedCelebrity}
-                        disabled={isSubmitting}
-                      />
-                    ))}
-                  </div>
-                );
-              })()}
-            </GroupBox>
-
-            {/* --- Topic Input Area --- */}
-            <GroupBox
-              label="2. What would you like explained?"
-              style={{ marginBottom: "0.5rem" }}
+              }}
             >
-              <TextInput
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="Enter any topic or question..."
-                style={{ marginBottom: "0.5rem" }}
-                disabled={isSubmitting}
-                fullWidth
-              />
-              <R95Button
-                onClick={handleGenerate}
-                disabled={!selectedCelebrity || !topic || isSubmitting}
-                fullWidth
-                style={{ height: "36px" }}
-              >
-                {isSubmitting ? "Creating..." : "Generate Explanation"}
-              </R95Button>
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </main>
 
-              <div style={{ marginTop: "0.5rem" }}>
-                {!isSubmitting && !selectedCelebrity && !topic && (
-                  <Frame variant="status" style={{ padding: "0.25rem 0.5rem" }}>
-                    <p style={{ fontSize: "0.875rem" }}>
-                      Select a celebrity and enter a topic above.
-                    </p>
-                  </Frame>
-                )}
-                {!isSubmitting && selectedCelebrity && topic && (
-                  <Frame variant="well" style={{ padding: "0.35rem 0.5rem" }}>
-                    <p style={{ fontSize: "0.875rem" }}>
-                      Ready: <strong>{selectedCelebrity.name}</strong> will
-                      explain <strong>{topic}</strong>
-                    </p>
-                  </Frame>
-                )}
-                {isSubmitting && (
-                  <Frame
-                    variant="status"
-                    style={{
-                      padding: "0.35rem 0.5rem",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <p style={{ fontSize: "0.875rem", marginRight: "1rem" }}>
-                      Generating explanation...
-                    </p>
-                    <ProgressBar style={{ width: "150px" }} />
-                  </Frame>
-                )}
-                {loadError && !loadingCelebrities && (
-                  <Frame
-                    variant="well"
-                    style={{
-                      padding: "0.35rem 0.5rem",
-                      color: "red",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    <p>Error: {loadError}</p>
-                  </Frame>
-                )}
+      {/* Features Section */}
+      <section id="features" className="py-16 sm:py-24 bg-slate-900/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Why You'll Love Celeb<span className="text-purple-400">X</span>
+              plain
+            </h3>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Discover the features that make learning engaging and fun.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-slate-800/70 p-6 rounded-lg shadow-xl border border-purple-500/30 hover:shadow-purple-500/20 transition-shadow duration-300">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white mb-4">
+                <User className="h-6 w-6" />
               </div>
-            </GroupBox>
-
-            {/* --- Process Visualization Area --- */}
-            <GroupBox label="How It Works" style={{ flexShrink: 0 }}>
-              <R95ProcessSteps steps={steps} />
-            </GroupBox>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                Personalized Explanations
+              </h4>
+              <p className="text-slate-400">
+                Choose from a list of celebrities. Our AI crafts a script in
+                their unique style.
+              </p>
+            </div>
+            <div className="bg-slate-800/70 p-6 rounded-lg shadow-xl border border-purple-500/30 hover:shadow-purple-500/20 transition-shadow duration-300">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white mb-4">
+                <Wand2 className="h-6 w-6" />
+              </div>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                AI-Powered Content
+              </h4>
+              <p className="text-slate-400">
+                Leveraging cutting-edge AI to generate engaging and accurate
+                video scripts for any topic.
+              </p>
+            </div>
+            <div className="bg-slate-800/70 p-6 rounded-lg shadow-xl border border-purple-500/30 hover:shadow-purple-500/20 transition-shadow duration-300">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white mb-4">
+                <Film className="h-6 w-6" />
+              </div>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                Instant Video Generation
+              </h4>
+              <p className="text-slate-400">
+                Go from idea to a unique, celebrity-narrated video in minutes.
+                Learning has never been faster or more fun.
+              </p>
+            </div>
           </div>
+        </div>
+      </section>
 
-          {/* --- Footer (stays outside the max-width container) --- */}
-          <Frame
-            variant="status"
-            style={{
-              marginTop: "auto",
-              padding: "0.15rem 0.5rem",
-              textAlign: "center",
-              flexShrink: 0,
-            }}
-          >
-            © {new Date().getFullYear()} Celebrity Explainer Generator
-          </Frame>
-        </WindowContent>
-      </Window>
+      {/* How it works (Simplified) */}
+      <section className="py-16 sm:py-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Simple Steps to Genius
+            </h3>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Creating your personalized explainer video is easy.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-purple-500/20 text-purple-300 border-2 border-purple-400 mb-4">
+                <span className="text-2xl font-bold">1</span>
+              </div>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                Pick a Celebrity
+              </h4>
+              <p className="text-slate-400 px-4">
+                Select who you want to hear from.
+              </p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-purple-500/20 text-purple-300 border-2 border-purple-400 mb-4">
+                <span className="text-2xl font-bold">2</span>
+              </div>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                Enter Your Topic
+              </h4>
+              <p className="text-slate-400 px-4">
+                Tell us what you want to learn about.
+              </p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-purple-500/20 text-purple-300 border-2 border-purple-400 mb-4">
+                <span className="text-2xl font-bold">3</span>
+              </div>
+              <h4 className="text-xl font-semibold mb-2 text-slate-100">
+                Generate & Watch
+              </h4>
+              <p className="text-slate-400 px-4">
+                AI crafts your video. Enjoy!
+              </p>
+            </div>
+          </div>
+          <div className="text-center mt-12">
+            <Link href="/dashboard" legacyBehavior>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white text-lg py-3 px-8 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105"
+              >
+                Try It Free <Zap className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 bg-slate-900/70 border-t border-slate-700/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Brain className="h-6 w-6 text-purple-400" />
+            <h1 className="text-xl font-bold">
+              Celeb<span className="text-purple-400">X</span>plain
+            </h1>
+          </div>
+          <p className="text-sm">
+            &copy; {new Date().getFullYear()} CelebXplain. All rights reserved.
+            Transforming education, one celebrity at a time.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
