@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useJob } from "@/lib/job-context";
 import { fetchPersonas, type Celebrity } from "@/lib/api";
@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -28,12 +29,20 @@ import {
   ListChecks,
   CheckCircle,
   Wand2,
+  Sparkles,
+  ChevronRight,
+  Lightbulb,
+  Users,
+  MicVocal,
+  MessageSquareText,
+  Info,
+  Star,
 } from "lucide-react";
 
-// Assuming ProcessSteps is now in a separate file and styled with Tailwind
-import { ProcessSteps } from "@/components/process-steps";
+// Removed ProcessSteps import, will integrate its content differently or simplify
 
-// --- New Celebrity Card Component (Shadcn/Tailwind) ---
+// --- Celebrity Card Component ---
+// Attempting a new style for the celebrity cards for a fresher look.
 interface CelebrityCardProps {
   celebrity: Celebrity;
   isSelected: boolean;
@@ -48,45 +57,72 @@ const CelebrityCard: React.FC<CelebrityCardProps> = ({
   disabled,
 }) => {
   return (
-    <Card
-      className={`w-[200px] text-center transition-all duration-200 ease-in-out cursor-pointer hover:shadow-lg ${
-        isSelected ? "ring-2 ring-primary shadow-xl" : "shadow-md"
-      } ${disabled ? "opacity-70 cursor-not-allowed" : ""}`}
+    <div
       onClick={() => !disabled && onSelect(celebrity)}
+      className={`
+        group relative rounded-xl border p-4 transition-all duration-300 ease-in-out cursor-pointer 
+        flex flex-col items-center justify-start text-center
+        ${
+          disabled
+            ? "opacity-50 cursor-not-allowed grayscale"
+            : "hover:shadow-2xl hover:border-primary/80"
+        }
+        ${
+          isSelected
+            ? "bg-primary/10 border-primary ring-2 ring-primary shadow-2xl"
+            : "bg-slate-800/70 border-slate-700/80 hover:bg-slate-700/90"
+        }
+      `}
     >
-      <CardContent className="p-4 pt-6 flex flex-col items-center">
-        <Image
-          src={celebrity.image}
-          alt={celebrity.name}
-          width={80}
-          height={80}
-          className="rounded-full mb-3 border"
-        />
-        <h3
-          className="font-semibold text-lg mb-2 truncate w-full"
-          title={celebrity.name}
-        >
-          {celebrity.name}
-        </h3>
-        <Button
-          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.stopPropagation(); // Prevent card click when button is clicked
-            if (!disabled) onSelect(celebrity);
-          }}
-          disabled={disabled}
-          variant={isSelected ? "default" : "outline"}
-          size="sm"
-          className="w-full"
-        >
-          {isSelected ? "Selected" : "Select"}
-        </Button>
-      </CardContent>
-    </Card>
+      <Image
+        src={celebrity.image}
+        alt={celebrity.name}
+        width={88} // Larger image
+        height={88}
+        className={`rounded-full mb-4 border-4 transition-all duration-300 
+          ${
+            isSelected
+              ? "border-primary/70"
+              : "border-slate-600 group-hover:border-primary/50"
+          }
+        `}
+      />
+      <h3
+        className="font-medium text-lg leading-tight text-slate-50 mb-1 truncate w-full"
+        title={celebrity.name}
+      >
+        {celebrity.name}
+      </h3>
+      <p className="text-xs text-slate-400 group-hover:text-slate-300 mb-4 h-8">
+        {" "}
+        {/* Placeholder for potential brief description if added later */}
+        {/* Example: AI Persona */}
+      </p>
+      <Button
+        variant={isSelected ? "default" : "outline"}
+        size="sm"
+        className={`w-full mt-auto text-sm transition-all duration-200 
+            ${
+              isSelected
+                ? "bg-primary hover:bg-primary/90"
+                : "border-slate-600 hover:border-primary hover:text-primary bg-slate-700/50 hover:bg-slate-700"
+            }
+            ${disabled ? "opacity-70" : ""}
+          `}
+        disabled={disabled}
+      >
+        {isSelected ? (
+          <CheckCircle size={16} className="mr-2" />
+        ) : (
+          <Star size={16} className="mr-2" />
+        )}
+        {isSelected ? "Selected" : "Choose"}
+      </Button>
+    </div>
   );
 };
 
 export default function DashboardPage() {
-  // Renamed from Home to DashboardPage
   const [selectedCelebrity, setSelectedCelebrity] = useState<Celebrity | null>(
     null
   );
@@ -95,28 +131,33 @@ export default function DashboardPage() {
   const [celebrities, setCelebrities] = useState<Celebrity[]>([]);
   const [loadingCelebrities, setLoadingCelebrities] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { clearJob, createNewJob } = useJob();
   const router = useRouter();
 
   useEffect(() => {
     const loadCelebrities = async () => {
+      setLoadingCelebrities(true);
+      setLoadError(null);
       try {
-        setLoadingCelebrities(true);
-        setLoadError(null);
         const data = await fetchPersonas();
         setCelebrities(data);
       } catch (err) {
         setLoadError(
-          err instanceof Error ? err.message : "Failed to load celebrities"
+          err instanceof Error ? err.message : "Failed to load personas"
         );
-        console.error("Error loading celebrities:", err);
+        console.error("Error loading personas:", err);
       } finally {
         setLoadingCelebrities(false);
       }
     };
     loadCelebrities();
   }, []);
+
+  const filteredCelebrities = celebrities.filter((celeb) =>
+    celeb.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleGenerate = async () => {
     if (!selectedCelebrity || !topic.trim() || isSubmitting) return;
@@ -129,166 +170,229 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Error creating job:", error);
       setLoadError("Failed to start explanation generation. Please try again.");
-      setIsSubmitting(false);
+    } finally {
+      setIsSubmitting(false); // Ensure this is always reset
     }
   };
 
-  const steps = [
-    {
-      title: "Select Celebrity & Topic",
-      description: "Choose who explains and what they explain.",
-      icon: <ListChecks size={24} />,
-    },
-    {
-      title: "AI Generates Script",
-      description: "Our AI crafts a personalized script in their style.",
-      icon: <Wand2 size={24} />,
-    },
-    {
-      title: "Watch Your Video",
-      description: "Enjoy your unique, celebrity-narrated explanation!",
-      icon: <Film size={24} />,
-    },
-  ];
-
   const canSubmit = selectedCelebrity && topic.trim() && !isSubmitting;
 
+  // Simplified steps directly integrated or implied by the flow
+  // const steps = [...];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-      <Card className="w-full max-w-4xl shadow-2xl bg-slate-800/70 backdrop-blur-md border-slate-700">
-        <CardHeader className="text-center pb-4 pt-8">
-          <div className="inline-flex items-center justify-center bg-primary/10 p-3 rounded-full mb-4 border border-primary/30">
-            <Brain size={40} className="text-primary" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-3xl mx-auto">
+        {/* Header */}
+        <header className="mb-10 text-center">
+          <div className="inline-flex items-center justify-center bg-purple-600/20 p-3.5 rounded-full mb-5 shadow-lg border-2 border-purple-500/50">
+            <Brain size={36} className="text-purple-300" />
           </div>
-          <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
-            Oracle Dashboard
-          </CardTitle>
-          <CardDescription className="text-base sm:text-lg text-slate-400 mt-2">
-            Create new explanations or view your existing ones.
-          </CardDescription>
-        </CardHeader>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 pb-2">
+            AI Oracle Studio
+          </h1>
+          <p className="text-lg text-slate-400 max-w-xl mx-auto">
+            Craft engaging video explanations with your favorite AI personas.
+            It's simple: Pick a persona, enter your topic, and let the AI work
+            its magic.
+          </p>
+        </header>
 
-        <CardContent className="p-6 sm:p-8 space-y-8">
-          {/* --- Process Steps Section --- */}
-          <section aria-labelledby="process-steps-title">
-            <h2
-              id="process-steps-title"
-              className="text-2xl font-semibold text-center mb-6 text-slate-200"
-            >
-              How It Works
-            </h2>
-            <ProcessSteps steps={steps} />
-          </section>
-
-          {/* --- Celebrity Selection Area --- */}
-          <section aria-labelledby="celebrity-selection-title">
-            <h2
-              id="celebrity-selection-title"
-              className="text-2xl font-semibold text-slate-200 mb-4"
-            >
-              1. Choose Your Celebrity
-            </h2>
-            {loadingCelebrities && (
-              <div className="flex flex-col items-center justify-center text-slate-400 py-8">
-                <Loader2 size={32} className="animate-spin mb-3" />
-                <p>Loading celebrities...</p>
-                <Progress value={50} className="w-1/2 mt-3 h-2 bg-slate-700" />
-              </div>
-            )}
-            {!loadingCelebrities && celebrities.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {celebrities.map((celeb) => (
-                  <CelebrityCard
-                    key={celeb.id}
-                    celebrity={celeb}
-                    isSelected={selectedCelebrity?.id === celeb.id}
-                    onSelect={setSelectedCelebrity}
-                    disabled={isSubmitting}
+        {/* Main Creation Workflow in a single Card */}
+        <Card className="w-full shadow-2xl bg-slate-900/80 border-slate-700/60 backdrop-blur-lg">
+          <CardContent className="p-6 sm:p-8 space-y-8">
+            {/* Step 1: Choose Persona */}
+            <section aria-labelledby="persona-selection-title">
+              <div className="flex flex-col md:flex-row justify-between md:items-center mb-5">
+                <h2
+                  id="persona-selection-title"
+                  className="text-2xl font-semibold text-slate-100 flex items-center mb-3 md:mb-0"
+                >
+                  <MicVocal size={24} className="mr-3 text-purple-400" />
+                  Choose Your Persona
+                </h2>
+                <div className="relative w-full md:w-auto md:min-w-[250px]">
+                  <Search
+                    size={18}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
                   />
-                ))}
+                  <Input
+                    type="text"
+                    placeholder="Search personas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border-slate-700 focus:ring-purple-500 focus:border-purple-500 rounded-lg text-sm"
+                    disabled={loadingCelebrities || isSubmitting}
+                  />
+                </div>
               </div>
-            )}
-            {!loadingCelebrities && celebrities.length === 0 && !loadError && (
-              <Alert
-                variant="default"
-                className="bg-slate-700 border-slate-600"
+
+              {loadingCelebrities && (
+                <div className="flex flex-col items-center justify-center text-slate-400 py-10 text-center">
+                  <Loader2
+                    size={36}
+                    className="animate-spin mb-4 text-purple-400"
+                  />
+                  <p className="text-base font-medium text-slate-300">
+                    Loading Personas...
+                  </p>
+                  <Progress
+                    value={66}
+                    className="w-1/2 mt-4 h-1.5 bg-slate-700 rounded-full"
+                  />
+                </div>
+              )}
+
+              {!loadingCelebrities &&
+                celebrities.length > 0 &&
+                (filteredCelebrities.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredCelebrities.map((celeb) => (
+                      <CelebrityCard
+                        key={celeb.id}
+                        celebrity={celeb}
+                        isSelected={selectedCelebrity?.id === celeb.id}
+                        onSelect={setSelectedCelebrity}
+                        disabled={isSubmitting}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Alert
+                    variant="default"
+                    className="bg-slate-800/70 border-slate-700 text-center py-6"
+                  >
+                    <Search
+                      size={22}
+                      className="mx-auto mb-2.5 text-slate-500"
+                    />
+                    <AlertTitle className="text-lg font-medium text-slate-300">
+                      No Matching Personas
+                    </AlertTitle>
+                    <AlertDescription className="text-slate-400 text-sm">
+                      No personas found for "{searchTerm}". Try a different
+                      search.
+                    </AlertDescription>
+                  </Alert>
+                ))}
+
+              {!loadingCelebrities &&
+                celebrities.length === 0 &&
+                !loadError && (
+                  <Alert
+                    variant="default"
+                    className="bg-slate-800/70 border-slate-700 text-center py-6"
+                  >
+                    <User size={22} className="mx-auto mb-2.5 text-slate-500" />
+                    <AlertTitle className="text-lg font-medium text-slate-300">
+                      No Personas Available
+                    </AlertTitle>
+                    <AlertDescription className="text-slate-400 text-sm">
+                      Check back later or ensure personas are loaded correctly.
+                    </AlertDescription>
+                  </Alert>
+                )}
+            </section>
+
+            {/* Step 2: Enter Topic */}
+            <section aria-labelledby="topic-input-title">
+              <h2
+                id="topic-input-title"
+                className="text-2xl font-semibold text-slate-100 mb-4 flex items-center"
               >
-                <User size={20} className="text-slate-400" />
-                <AlertTitle className="text-slate-300">
-                  No Celebrities Found
-                </AlertTitle>
-                <AlertDescription className="text-slate-400">
-                  We couldn't find any celebrities to choose from at the moment.
-                </AlertDescription>
-              </Alert>
-            )}
-          </section>
+                <Lightbulb size={24} className="mr-3 text-purple-400" />
+                Enter Your Topic
+              </h2>
+              <div className="relative">
+                <Input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g., How do black holes work? The story of the internet..."
+                  disabled={isSubmitting || !selectedCelebrity}
+                  className="w-full text-base p-3.5 pl-4 bg-slate-800 border-slate-700 placeholder:text-slate-500 focus:ring-purple-500 focus:border-purple-500 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                  aria-describedby="topic-helper-text"
+                />
+              </div>
+              {selectedCelebrity && (
+                <p
+                  id="topic-helper-text"
+                  className="text-xs text-slate-400 mt-2 ml-1"
+                >
+                  {topic.trim() === ""
+                    ? `What should ${selectedCelebrity.name} explain?`
+                    : `Explaining "${topic}" as ${selectedCelebrity.name}.`}
+                </p>
+              )}
+              {!selectedCelebrity && (
+                <p
+                  id="topic-helper-text"
+                  className="text-xs text-slate-500 mt-2 ml-1"
+                >
+                  Select a persona above to enable topic input.
+                </p>
+              )}
+            </section>
 
-          {/* --- Topic Input Area --- */}
-          <section aria-labelledby="topic-input-title">
-            <h2
-              id="topic-input-title"
-              className="text-2xl font-semibold text-slate-200 mb-4"
-            >
-              2. Enter Your Topic
-            </h2>
-            <div className="relative">
-              <Search
-                size={20}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-              <Input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Quantum Physics, How to Bake Sourdough, The History of Jazz..."
-                disabled={isSubmitting}
-                className="w-full text-lg p-4 pl-10 bg-slate-700 border-slate-600 placeholder:text-slate-500 focus:ring-primary focus:border-primary"
-              />
-            </div>
-            {selectedCelebrity && (
-              <p className="text-sm text-slate-400 mt-2 ml-1">
-                Explaining "{topic || "..."}" as {selectedCelebrity.name}
-              </p>
-            )}
-          </section>
-
-          {/* --- Submission Area --- */}
-          <section aria-labelledby="submission-title" className="pt-6">
+            {/* Error Display Area (moved above button for clarity) */}
             {loadError && (
               <Alert
                 variant="destructive"
-                className="mb-6 bg-red-900/30 border-red-700 text-red-300"
+                className="mb-0 bg-red-700/20 border-red-600/50 text-red-300"
               >
-                <AlertCircle className="h-4 w-4" />
+                <AlertCircle className="h-5 w-5 text-red-400" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{loadError}</AlertDescription>
               </Alert>
             )}
+          </CardContent>
+
+          {/* Footer of the card for the main action */}
+          <CardFooter className="p-6 sm:p-8 border-t border-slate-700/60 mt-4">
             <Button
               onClick={handleGenerate}
               disabled={!canSubmit}
-              className="w-full text-lg py-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2"
+              size="lg"
+              className="w-full text-base py-6 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 hover:from-purple-700 hover:via-pink-600 hover:to-orange-600 
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out 
+                           transform hover:scale-[1.01] group rounded-lg shadow-lg hover:shadow-purple-500/30 focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-pink-500"
             >
               {isSubmitting ? (
-                <Loader2 size={24} className="animate-spin" />
+                <Loader2 size={22} className="animate-spin mr-2.5" />
               ) : (
-                <CheckCircle size={24} />
+                <Sparkles
+                  size={20}
+                  className="mr-2.5 transition-transform duration-300 group-hover:scale-110"
+                />
               )}
               <span>
                 {isSubmitting
-                  ? "Generating Your Explanation..."
-                  : "Generate Explanation Video"}
+                  ? "Generating AI Magic..."
+                  : "Create Explanation Video"}
               </span>
+              {!isSubmitting && (
+                <ChevronRight
+                  size={22}
+                  className="ml-1.5 opacity-70 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
+                />
+              )}
             </Button>
-          </section>
-        </CardContent>
-      </Card>
+          </CardFooter>
+        </Card>
 
-      <footer className="text-center py-8 text-slate-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} Oracle. All rights reserved.</p>
-        <p>Powered by AI magic.</p>
-      </footer>
+        {isSubmitting && (
+          <p className="text-center text-slate-500 mt-6 text-sm">
+            Oracle is thinking... This may take a few moments.
+          </p>
+        )}
+
+        {/* Simplified Footer */}
+        <footer className="text-center pt-12 pb-6 text-slate-600 text-xs">
+          <p>
+            &copy; {new Date().getFullYear()} Oracle AI. All Rights Reserved.
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }

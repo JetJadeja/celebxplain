@@ -2,8 +2,8 @@
 
 import React from "react";
 import useEmblaCarousel from "embla-carousel-react";
-// import Autoplay from "embla-carousel-autoplay"; // Remove Autoplay
-import AutoScroll from "embla-carousel-auto-scroll"; // Add AutoScroll
+import { type EmblaOptionsType } from "embla-carousel";
+import AutoScroll from "embla-carousel-auto-scroll";
 import Image from "next/image";
 
 const PLACEHOLDER_IMAGES = [
@@ -50,25 +50,20 @@ const PLACEHOLDER_IMAGES = [
 ];
 
 export const PhotoCarousel = () => {
-  const [emblaRef] = useEmblaCarousel(
-    {
-      loop: true,
-      align: "start",
-      containScroll: "trimSnaps",
-    },
-    [
-      // Autoplay({
-      //   delay: 3000,
-      //   stopOnInteraction: false,
-      //   stopOnMouseEnter: true,
-      // }),
-      AutoScroll({
-        speed: 1, // Adjust speed as needed, 1 is a moderate default
-        stopOnInteraction: true, // Default, but good to be explicit
-        stopOnMouseEnter: false, // Changed to false
-      }),
-    ]
-  );
+  const emblaOptions: EmblaOptionsType = {
+    loop: true,
+    align: "start",
+    containScroll: "trimSnaps",
+    watchDrag: false, // Disable manual dragging using watchDrag
+  };
+
+  const [emblaRef] = useEmblaCarousel(emblaOptions, [
+    AutoScroll({
+      speed: 1,
+      stopOnInteraction: false, // Keep this false as well
+      stopOnMouseEnter: false,
+    }),
+  ]);
 
   return (
     <section className="pb-12 md:pb-16">
