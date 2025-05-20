@@ -58,27 +58,27 @@ const UpdatesTimeline = React.memo(
     if (!updates || updates.length === 0) return null;
 
     return (
-      <Card className="w-full mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div className="w-full mt-6">
+        <div className="pb-4">
+          <h3 className="text-lg text-slate-100 font-semibold">{title}</h3>
+        </div>
+        <div>
           {updates.length > 0 ? (
-            <div className="space-y-1 text-sm px-6 pb-6">
+            <div className="space-y-1 text-sm">
               {updates.map((update, index) => (
                 <div
                   key={update.id || index}
-                  className="flex items-start p-3 border-b last:border-b-0"
+                  className="flex items-start p-3 border-b border-slate-700 last:border-b-0"
                 >
                   <div className="flex-shrink-0 mt-1">
                     {getStatusIcon(update.status)}
                   </div>
                   <div className="flex-grow ml-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium capitalize">
+                      <span className="font-medium capitalize text-slate-200">
                         {update.status}
                       </span>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                      <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
                         {new Date(update.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -87,7 +87,7 @@ const UpdatesTimeline = React.memo(
                       </span>
                     </div>
                     {update.message && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-slate-400 mt-0.5">
                         {update.message}
                       </p>
                     )}
@@ -96,12 +96,12 @@ const UpdatesTimeline = React.memo(
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center p-6">
+            <p className="text-sm text-slate-400 text-center p-6">
               No updates yet...
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 );
@@ -114,11 +114,16 @@ const JobIdDisplay = ({ id }: { id?: string }) => {
     <div className="flex items-center mt-2">
       <label
         htmlFor="jobIdInput"
-        className="text-sm mr-2 whitespace-nowrap font-medium"
+        className="text-sm mr-2 whitespace-nowrap font-medium text-slate-200"
       >
         Job ID:
       </label>
-      <Input id="jobIdInput" value={id} readOnly className="text-sm" />
+      <Input
+        id="jobIdInput"
+        value={id}
+        readOnly
+        className="text-sm bg-slate-700 border-slate-600 text-slate-50 placeholder:text-slate-400"
+      />
     </div>
   );
 };
@@ -133,103 +138,105 @@ export function JobResult({ onReset }: JobResultProps) {
   // Loading state
   if (loading && !jobStatus) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Loading...</CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
+      <div className="w-full max-w-2xl mx-auto py-4">
+        <div className="mb-4">
+          <h3 className="text-slate-100 text-xl font-semibold">Loading...</h3>
+        </div>
+        <div className="text-center">
           <div className="flex items-center justify-center mb-3">
-            <Loader size={24} className="mr-2 animate-spin" />
-            <p className="text-muted-foreground">Retrieving job details...</p>
+            <Loader size={24} className="mr-2 animate-spin text-slate-300" />
+            <p className="text-slate-400">Retrieving job details...</p>
           </div>
           <JobIdDisplay id={jobId} />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <Card className="w-full max-w-2xl mx-auto border-destructive">
-        <CardHeader>
+      <div className="w-full max-w-2xl mx-auto py-4">
+        <div className="mb-4">
           <div className="flex items-center text-destructive">
             <AlertCircle size={20} className="mr-2 flex-shrink-0" />
-            <CardTitle>Error</CardTitle>
+            <h3 className="text-xl font-semibold">Error</h3>
           </div>
-          <CardDescription className="text-destructive">
+          <p className="text-destructive/90 text-sm mt-1">
             We encountered a problem retrieving the job details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive mb-3">{error}</p>
+          </p>
+        </div>
+        <div className="mb-4">
+          <p className="text-sm text-destructive/90 mb-3">{error}</p>
           <JobIdDisplay id={jobId} />
-        </CardContent>
-        <CardFooter>
+        </div>
+        <div>
           <Button onClick={onReset} variant="outline" className="w-full">
             Try Again
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Job failed state
   if (jobStatus?.status === "failed" || jobStatus?.status === "error") {
     return (
-      <Card className="w-full max-w-2xl mx-auto border-destructive">
-        <CardHeader>
+      <div className="w-full max-w-2xl mx-auto py-4">
+        <div className="mb-4">
           <div className="flex items-center text-destructive">
             <AlertCircle size={20} className="mr-2 flex-shrink-0" />
-            <CardTitle>Generation Failed</CardTitle>
+            <h3 className="text-xl font-semibold">Generation Failed</h3>
           </div>
-          <CardDescription className="text-destructive">
+          <p className="text-destructive/90 text-sm mt-1">
             We couldn't generate your explanation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive mb-1">
+          </p>
+        </div>
+        <div className="mb-4">
+          <p className="text-sm text-destructive/90 mb-1">
             Reason: {jobStatus.error || "Unknown error occurred"}
           </p>
           <JobIdDisplay id={jobId} />
           <UpdatesTimeline updates={jobUpdates} title="Attempt Details" />
-        </CardContent>
-        <CardFooter>
+        </div>
+        <div>
           <Button onClick={onReset} variant="outline" className="w-full mt-4">
             Try Again
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Job completed successfully
   if (jobStatus?.status === "completed" && jobStatus.result) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center text-green-600">
+      <div className="w-full max-w-2xl mx-auto py-4">
+        <div className="mb-4">
+          <div className="flex items-center text-green-500">
             <CheckCircle size={20} className="mr-2 flex-shrink-0" />
-            <CardTitle>Your Explanation is Ready!</CardTitle>
+            <h3 className="text-green-400 text-xl font-semibold">
+              Your Explanation is Ready!
+            </h3>
           </div>
-          <CardDescription>Explanation generated successfully!</CardDescription>
-        </CardHeader>
-        <CardContent>
+          <p className="text-slate-300 text-sm mt-1">
+            Explanation generated successfully!
+          </p>
+        </div>
+        <div>
           <JobIdDisplay id={jobId} />
 
           {/* Video Placeholder - Styled with Tailwind */}
-          <div className="my-6 p-4 h-48 flex flex-col items-center justify-center bg-muted/30 border border-dashed rounded-lg">
-            <Video size={40} className="text-muted-foreground mb-2" />
-            <p className="text-muted-foreground text-sm">
-              (Video Playback Area)
-            </p>
+          <div className="my-6 p-4 h-48 flex flex-col items-center justify-center bg-slate-700/50 border border-dashed border-slate-600 rounded-lg">
+            <Video size={40} className="text-slate-400 mb-2" />
+            <p className="text-slate-400 text-sm">(Video Playback Area)</p>
           </div>
 
           {/* Result Text using Shadcn Textarea */}
           <div className="mb-6">
             <label
               htmlFor="explanationText"
-              className="block text-sm font-medium mb-1"
+              className="block text-sm font-medium mb-1 text-slate-200"
             >
               Generated Explanation Text
             </label>
@@ -238,43 +245,44 @@ export function JobResult({ onReset }: JobResultProps) {
               value={jobStatus.result}
               readOnly
               rows={10}
-              className="w-full text-sm bg-background"
+              className="w-full text-sm bg-slate-700 border-slate-600 text-slate-50"
             />
           </div>
-
           <UpdatesTimeline updates={jobUpdates} title="Generation Timeline" />
-        </CardContent>
-        <CardFooter className="flex justify-end gap-2 pt-4">
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
           <Button onClick={onReset} variant="outline">
             Generate Another
           </Button>
           <Button disabled>Share This</Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Default case: job is processing
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
+    <div className="w-full max-w-2xl mx-auto py-4">
+      <div className="mb-4">
         <div className="flex items-center">
-          <Loader size={20} className="mr-2 animate-spin" />
-          <CardTitle>Working on your explanation</CardTitle>
+          <Loader size={20} className="mr-2 animate-spin text-slate-300" />
+          <h3 className="text-slate-100 text-xl font-semibold">
+            Working on your explanation
+          </h3>
         </div>
-        <CardDescription>
+        <p className="text-slate-300 text-sm mt-1">
           Status: {jobStatus?.status || job?.status || "Processing..."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </div>
+      <div className="mb-4">
         <JobIdDisplay id={jobId} />
-        <p className="text-sm text-muted-foreground mt-3">
+        <p className="text-sm text-slate-400 mt-3">
           Your request is being processed. Please be patient. This might take a
           few moments.
         </p>
         <UpdatesTimeline updates={jobUpdates} title="Current Progress" />
-      </CardContent>
-      <CardFooter>
+      </div>
+      <div>
         <Button
           onClick={onReset}
           variant="outline"
@@ -283,7 +291,7 @@ export function JobResult({ onReset }: JobResultProps) {
         >
           {loading ? "Processing..." : "Cancel / Reset"}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

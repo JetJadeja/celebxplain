@@ -118,7 +118,7 @@ export default function JobResultsPage() {
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           {isProcessing && !error && (
-            <div className="flex flex-col items-center justify-center text-center p-6 bg-slate-700/50 rounded-lg border border-slate-600">
+            <div className="flex flex-col items-center justify-center text-center p-6 rounded-lg">
               <Timer size={40} className="text-primary mb-3 animate-pulse" />
               <h3 className="text-xl font-semibold text-slate-200 mb-1">
                 Your explanation is cooking!
@@ -131,9 +131,7 @@ export default function JobResultsPage() {
           )}
 
           {/* JobResult component will handle its own loading/error/success states based on useJob context */}
-          <div className="bg-slate-800 p-0 sm:p-0 rounded-lg_NO_NEED_FOR_THIS_JobResult_is_a_Card_Now">
-            <JobResult onReset={handleReset} />
-          </div>
+          <JobResult onReset={handleReset} />
         </CardContent>
         <CardFooter className="px-6 py-4 border-t border-slate-700 text-center">
           <p className="text-xs text-slate-500">
