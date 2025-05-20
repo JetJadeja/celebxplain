@@ -156,8 +156,6 @@ def handle_mention(tweet):
         }
     logger.info(f"Job {job_id} (original tweet {tweet.id}) added to active_jobs_cache.")
 
-    pass # End of handle_mention
-
 def get_job_tracking_info(job_id):
     """Helper to retrieve job tracking info from the cache, thread-safe."""
     with jobs_cache_lock:
@@ -224,7 +222,7 @@ def poll_job_statuses():
                     
                     media_id = None
                     reply_text_success = f"Here's {persona_name} explaining '{topic}'!"
-                    public_video_url = f"{YOUR_PUBLIC_FLASK_URL}/api/jobs/{job_id}/video"
+                    public_video_url = f"{YOUR_PUBLIC_FLASK_URL}/api/jobs/{job_id}"
 
                     if os.path.exists(video_file_path):
                         try:
