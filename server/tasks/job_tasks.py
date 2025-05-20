@@ -24,7 +24,7 @@ def process_job(job_id, persona_id, query):
     """
     try:
         # Define the job output directory
-        results_dir = os.path.join('server', 'data', 'results', job_id)
+        results_dir = os.path.join('data', 'results', job_id)
         os.makedirs(results_dir, exist_ok=True)
 
         # Step 1: Generate explanation content

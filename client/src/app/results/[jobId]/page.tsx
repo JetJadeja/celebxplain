@@ -22,12 +22,13 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { X, Timer, Loader2 } from "lucide-react"; // Added X and Timer, Loader2 for processing
+import { X, Timer } from "lucide-react"; // Added X and Timer for processing
 
 export default function JobResultsPage() {
   const router = useRouter();
   const params = useParams();
-  const { fetchJobById, job, jobStatus, loading, error, clearJob } = useJob(); // loading and error are available
+  // Use jobData from the context
+  const { fetchJobById, jobData, loading, error, clearJob } = useJob();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUnmountedRef = useRef(false);
 
@@ -38,23 +39,24 @@ export default function JobResultsPage() {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+    // Check status from jobData.job.status
     if (
       !isUnmountedRef.current &&
-      jobId && // Ensure jobId is present
-      (!jobStatus ||
-        (jobStatus.status !== "completed" &&
-          jobStatus.status !== "failed" &&
-          jobStatus.status !== "error"))
+      jobId &&
+      (!jobData?.job?.status ||
+        (jobData.job.status !== "completed" &&
+          jobData.job.status !== "failed" &&
+          jobData.job.status !== "error"))
     ) {
       timeoutRef.current = setTimeout(() => {
         if (!isUnmountedRef.current && jobId) {
           fetchJobById(jobId)
             .then(() => {
-              scheduleFetch();
+              scheduleFetch(); // Reschedule after successful fetch
             })
             .catch((err) => {
-              console.error("Polling fetch error:", err); // Differentiate from initial fetch error
-              scheduleFetch(); // Still attempt to reschedule
+              console.error("Polling fetch error:", err);
+              scheduleFetch(); // Still attempt to reschedule on error
             });
         }
       }, 5000);
@@ -69,8 +71,8 @@ export default function JobResultsPage() {
   useEffect(() => {
     isUnmountedRef.current = false;
     if (jobId) {
-      // Clear any existing job data for this new ID if it differs from current job
-      if (job && job.job_id !== jobId) {
+      // Clear any existing job data for this new ID if it differs from current jobData
+      if (jobData && jobData.job.job_id !== jobId) {
         clearJob();
       }
       fetchJobById(jobId)
@@ -79,7 +81,6 @@ export default function JobResultsPage() {
         })
         .catch((err) => {
           console.error("Initial fetch error for job:", jobId, err);
-          // Potentially set an error state here to be displayed by JobResult
           scheduleFetch(); // Attempt to reschedule even if initial fetch fails
         });
     }
@@ -91,13 +92,15 @@ export default function JobResultsPage() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId]); // Removed fetchJobById and clearJob from deps as they should be stable
+  }, [jobId]); // Dependencies: only jobId. fetchJobById and clearJob are stable from context.
 
+  // Determine if the job is actively processing based on jobData
   const isProcessing =
-    jobStatus &&
-    jobStatus.status !== "completed" &&
-    jobStatus.status !== "failed" &&
-    jobStatus.status !== "error";
+    !error && // Not in an error state
+    jobData?.job?.status && // jobData and status exist
+    jobData.job.status !== "completed" &&
+    jobData.job.status !== "failed" &&
+    jobData.job.status !== "error";
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-50 p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center">
@@ -117,7 +120,8 @@ export default function JobResultsPage() {
           </Button>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          {isProcessing && !error && (
+          {/* Show processing indicator if loading initially OR if status is processing */}
+          {(loading && !jobData) || (isProcessing && !error) ? (
             <div className="flex flex-col items-center justify-center text-center p-6 rounded-lg">
               <Timer size={40} className="text-primary mb-3 animate-pulse" />
               <h3 className="text-xl font-semibold text-slate-200 mb-1">
@@ -128,9 +132,10 @@ export default function JobResultsPage() {
                 topics. We're working on it and will update you here.
               </p>
             </div>
-          )}
+          ) : null}
 
-          {/* JobResult component will handle its own loading/error/success states based on useJob context */}
+          {/* JobResult component will now use jobData from context to display details, video, or errors */}
+          {/* It should not show its own loading/error if the main page already handles it, unless JobResult has specific sub-loading states */}
           <JobResult onReset={handleReset} />
         </CardContent>
         <CardFooter className="px-6 py-4 border-t border-slate-700 text-center">

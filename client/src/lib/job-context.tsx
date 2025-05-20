@@ -10,28 +10,28 @@ import React, {
   useCallback,
 } from "react";
 import {
-  JobResponse,
-  JobStatusResponse,
+  JobCreationResponse,
+  FetchedJobData,
   createJob,
   getJobStatus,
-  getJobWithUpdates,
 } from "./api";
 
 // Define the context state type
 interface JobContextState {
-  job: JobResponse | null;
-  jobStatus: JobStatusResponse | null;
+  jobData: FetchedJobData | null;
   loading: boolean;
   error: string | null;
-  createNewJob: (query: string, personaId: string) => Promise<JobResponse>;
+  createNewJob: (
+    query: string,
+    personaId: string
+  ) => Promise<JobCreationResponse>;
   clearJob: () => void;
-  fetchJobById: (jobId: string) => Promise<JobStatusResponse>;
+  fetchJobById: (jobId: string) => Promise<FetchedJobData>;
 }
 
 // Create context with default values
 const JobContext = createContext<JobContextState>({
-  job: null,
-  jobStatus: null,
+  jobData: null,
   loading: false,
   error: null,
   createNewJob: async () => {
@@ -51,28 +51,22 @@ interface JobProviderProps {
 }
 
 export const JobProvider = ({ children }: JobProviderProps) => {
-  // Use state for values that need to trigger re-renders
-  const [job, setJob] = useState<JobResponse | null>(null);
-  const [jobStatus, setJobStatus] = useState<JobStatusResponse | null>(null);
+  const [jobData, setJobData] = useState<FetchedJobData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use refs for tracking last fetch time to prevent too many fetches
   const lastFetchTime = useRef<{ [jobId: string]: number }>({});
   const isFetching = useRef<{ [jobId: string]: boolean }>({});
 
-  // Create a new job
   const createNewJob = useCallback(
-    async (query: string, personaId: string): Promise<JobResponse> => {
+    async (query: string, personaId: string): Promise<JobCreationResponse> => {
       setLoading(true);
       setError(null);
-      setJob(null);
-      setJobStatus(null);
+      setJobData(null);
 
       try {
-        const newJob = await createJob(query, personaId);
-        setJob(newJob);
-        return newJob;
+        const newJobDetails = await createJob(query, personaId);
+        return newJobDetails;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to create job";
@@ -85,57 +79,38 @@ export const JobProvider = ({ children }: JobProviderProps) => {
     []
   );
 
-  // Fetch job by ID - completely simplified version
   const fetchJobById = useCallback(
-    async (jobId: string): Promise<JobStatusResponse> => {
-      // Prevent concurrent fetches for the same job ID
+    async (jobId: string): Promise<FetchedJobData> => {
       if (isFetching.current[jobId]) {
         return Promise.resolve(
-          jobStatus ||
+          jobData ||
             ({
-              job_id: jobId,
-              status: "pending",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            } as JobStatusResponse)
+              job: {
+                job_id: jobId,
+                status: "pending",
+                created_at: new Date().toISOString(),
+              },
+              updates: [],
+            } as FetchedJobData)
         );
       }
 
-      // Check if we fetched recently (within 3 seconds)
       const now = Date.now();
       const lastFetch = lastFetchTime.current[jobId] || 0;
 
-      if (now - lastFetch < 3000) {
-        return Promise.resolve(
-          jobStatus ||
-            ({
-              job_id: jobId,
-              status: "pending",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            } as JobStatusResponse)
-        );
+      if (now - lastFetch < 3000 && jobData && jobData.job.job_id === jobId) {
+        return Promise.resolve(jobData);
       }
 
-      // Mark that we're fetching
       isFetching.current[jobId] = true;
       setLoading(true);
 
       try {
-        // Update last fetch time
         lastFetchTime.current[jobId] = now;
-
-        // Get job status
-        const status = await getJobStatus(jobId);
-
-        // Get full job if needed
-        const fullJob = await getJobWithUpdates(jobId);
-
-        // Update state only once with both pieces of data
-        setJobStatus(status);
-        setJob(fullJob);
-
-        return status;
+        const fetchedData = await getJobStatus(jobId);
+        setJobData(fetchedData);
+        setError(null);
+        return fetchedData;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to fetch job";
@@ -146,20 +121,16 @@ export const JobProvider = ({ children }: JobProviderProps) => {
         isFetching.current[jobId] = false;
       }
     },
-    [jobStatus]
+    [jobData]
   );
 
-  // Clear current job
   const clearJob = useCallback(() => {
-    setJob(null);
-    setJobStatus(null);
+    setJobData(null);
     setError(null);
   }, []);
 
-  // Context value
   const value = {
-    job,
-    jobStatus,
+    jobData,
     loading,
     error,
     createNewJob,

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, current_app
 from services.job_service import create_job, get_job_info
 import os
 
@@ -34,9 +34,25 @@ def get_job_status_route(job_id):
     if not job_data:
         return jsonify({'error': 'Job not found'}), 404
     
+    video_available = False
+    video_url = None
+    
+    # Check if final video exists
+    # Assuming 'final_video.mp4' is the standard name.
+    # Adjust if your naming convention is different or stored in job_data
+    final_video_path = os.path.join(current_app.root_path, 'data', 'results', job_id, 'final_video.mp4')
+
+    if os.path.exists(final_video_path) and job_data['job_details']['status'] == 'completed':
+        video_available = True
+        video_url = f'/api/jobs/{job_id}/video' # Use the existing video serving route
+
     # Restructure the response to match what the client expects
     response = {
-        'job': job_data['job_details'],
+        'job': {
+            **job_data['job_details'],
+            'video_available': video_available,
+            'video_url': video_url
+        },
         'updates': job_data['status_updates']
     }
     
@@ -54,7 +70,7 @@ def get_video_route(job_id):
         return jsonify({'error': 'Video not ready yet'}), 400
     
     # Path to final video file
-    video_path = os.path.join('server', 'data', 'results', job_id, 'final_video.mp4')
+    video_path = os.path.join(current_app.root_path, 'data', 'results', job_id, 'final_video.mp4')
     
     if not os.path.exists(video_path):
         return jsonify({'error': 'Video file not found'}), 404

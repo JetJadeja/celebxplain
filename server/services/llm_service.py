@@ -3,6 +3,7 @@ import dotenv
 import os
 import json
 import pathlib
+
 # Generate an explanation of the topic in the style of the celebrity
 def generate_explanation(persona_id, query):
     """Generate an explanation of the topic in the style of the celebrity"""
@@ -33,18 +34,20 @@ def generate_explanation(persona_id, query):
     style = persona["style_prompt"]
     name = persona["name"]
 
-    # Generate the explanation
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a brilliant writer who is capable of writing in the style of any person or celebrity. You are given a query and a style prompt. You need to write an explanation of the query in the style of the celebrity."},
-            {"role": "user", "content": f"""
-                I want you to write a speech in the style of {name}. It should be about 30-50 seconds long, with a hard cap of 60 seconds.
-                I want you to explain the following in great detail: {query}
-                Speak in the following style: {style}. Overall, it's incredibly important to really dive deep into explaining the concepts at a low level. You are a brilliant teacher, so don't hold back.
-            """}
-        ]
-    )
+    # # Generate the explanation
+    # response = client.chat.completions.create(
+    #     model="gpt-4o-mini",
+    #     messages=[
+    #         {"role": "system", "content": "You are a brilliant writer who is capable of writing in the style of any person or celebrity. You are given a query and a style prompt. You need to write an explanation of the query in the style of the celebrity."},
+    #         {"role": "user", "content": f"""
+    #             I want you to write a speech in the style of {name}. It should be about 30-50 seconds long, with a hard cap of 60 seconds.
+    #             I want you to explain the following in great detail: {query}
+    #             Speak in the following style: {style}. Overall, it's incredibly important to really dive deep into explaining the concepts at a low level. You are a brilliant teacher, so don't hold back.
+    #         """}
+    #     ]
+    # )
     
-    # Get the response
-    return response.choices[0].message.content
+    # # Get the response
+    # return response.choices[0].message.content
+
+    return "Hey there, I'm Steve Jobs, and today we're going to learn about why computers are cool."

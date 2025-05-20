@@ -23,7 +23,7 @@ def generate_speech(job_id, persona_id, script, results_dir):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
     # Get the persona data
-    with open(os.path.join('server', 'data', 'personas.json'), 'r') as f:
+    with open(os.path.join('data', 'personas.json'), 'r') as f:
         personas = json.load(f)
     
     persona = next((p for p in personas["personas"] if p["id"] == persona_id), None)

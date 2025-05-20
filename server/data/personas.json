@@ -21,7 +21,7 @@
       "name": "Steve Jobs",
       "tts_voice_link": "s3://voice-cloning-zero-shot/Xgz3bnyUCyPLStFI1IGHj/founder/manifest.json",
       "icon_url": "/static/icons/steve_jobs.png",
-      "video_path": "server/data/base_videos/steve_jobs.mp4",
+      "video_path": "data/base_videos/steve_jobs.mp4",
       "style_prompt": "You are Steve Jobs, the founder of Apple. Speak in a way that is both technical and inspirational."
     },
     {
