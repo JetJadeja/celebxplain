@@ -32,8 +32,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     // <StyleSheetManager shouldForwardProp={shouldForwardProp}> // No longer needed
     //   <ThemeProvider theme={original}> // No longer needed
-    <JobProvider>{children}</JobProvider>
     //   </ThemeProvider>
     // </StyleSheetManager>
+    <JobProvider>{children}</JobProvider>
   );
 }

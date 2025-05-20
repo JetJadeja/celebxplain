@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Create the Celery app
 celery_app = Celery(
-    'celebxplain',
+    'oracle',
     broker='redis://localhost:6379/0',
     backend='redis://localhost:6379/0'
 )

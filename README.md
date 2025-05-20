@@ -1,4 +1,4 @@
-# CelebXplain
+# Oracle
 
 Generate videos of celebrities explaining any concept using AI. This application takes a user-provided concept and a chosen celebrity, then leverages artificial intelligence to create a short video where the celebrity appears to explain that concept. The process involves generating a script, synthesizing the celebrity's voice, and using Sieve for video processing to create the final output.
 
@@ -35,8 +35,8 @@ Generate videos of celebrities explaining any concept using AI. This application
 ### 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/jetjadeja/celebxplain.git
-cd celebxplain
+git clone https://github.com/jetjadeja/oracle.git
+cd oracle
 ```
 
 ### 2. **Setup Backend (`server/`):**

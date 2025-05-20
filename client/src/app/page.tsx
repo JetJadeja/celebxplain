@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, Zap, User, Wand2, Film } from "lucide-react"; // Added User, Wand2, Film
+import PhotoCarousel from "@/components/ui/photo-carousel"; // Import the carousel
 
 export default function LandingPage() {
   return (
@@ -11,22 +12,12 @@ export default function LandingPage() {
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Brain className="h-8 w-8 text-purple-400" />
-          <h1 className="text-2xl font-bold tracking-tight">
-            Celeb<span className="text-purple-400">X</span>plain
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Oracle</h1>
         </div>
         <nav className="space-x-4">
-          <Link href="/dashboard" legacyBehavior>
-            <Button
-              variant="outline"
-              className="text-white border-purple-500 hover:bg-purple-600 hover:border-purple-600"
-            >
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/dashboard" legacyBehavior>
+          <Link href="/dashboard">
             <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+              Dashboard <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </nav>
@@ -49,12 +40,11 @@ export default function LandingPage() {
           </h2>
           <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
             Ever wished learning complex topics was as entertaining as watching
-            your favorite celebrity? Now it can be. CelebXplain uses AI to
-            generate unique video explanations in the style of well-known
-            personalities.
+            your favorite celebrity? Now it can be. Oracle uses AI to generate
+            unique video explanations in the style of well-known personalities.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Link href="/dashboard" legacyBehavior>
+            <Link href="/dashboard">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg py-3 px-8 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105"
@@ -65,7 +55,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto text-white border-purple-500 hover:bg-purple-500/20 hover:text-purple-300 text-lg py-3 px-8 rounded-lg shadow-lg"
+              className="w-full sm:w-auto bg-transparent text-white border-purple-500 hover:bg-purple-500/20 hover:text-purple-300 text-lg py-3 px-8 rounded-lg shadow-lg"
               onClick={() => {
                 const featuresSection = document.getElementById("features");
                 if (featuresSection) {
@@ -79,13 +69,15 @@ export default function LandingPage() {
         </div>
       </main>
 
+      {/* Photo Carousel Section */}
+      <PhotoCarousel />
+
       {/* Features Section */}
       <section id="features" className="py-16 sm:py-24 bg-slate-900/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Why You'll Love Celeb<span className="text-purple-400">X</span>
-              plain
+              Why You'll Love Oracle
             </h3>
             <p className="text-lg text-slate-400 max-w-2xl mx-auto">
               Discover the features that make learning engaging and fun.
@@ -179,7 +171,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="text-center mt-12">
-            <Link href="/dashboard" legacyBehavior>
+            <Link href="/dashboard">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white text-lg py-3 px-8 rounded-lg shadow-lg transform transition-all duration-300 hover:scale-105"
@@ -196,12 +188,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Brain className="h-6 w-6 text-purple-400" />
-            <h1 className="text-xl font-bold">
-              Celeb<span className="text-purple-400">X</span>plain
-            </h1>
+            <h1 className="text-xl font-bold">Oracle</h1>
           </div>
           <p className="text-sm">
-            &copy; {new Date().getFullYear()} CelebXplain. All rights reserved.
+            &copy; {new Date().getFullYear()} Oracle. All rights reserved.
             Transforming education, one celebrity at a time.
           </p>
         </div>

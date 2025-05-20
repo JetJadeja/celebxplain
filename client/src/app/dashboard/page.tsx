@@ -161,7 +161,7 @@ export default function DashboardPage() {
             <Brain size={40} className="text-primary" />
           </div>
           <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
-            Celebrity Explainer Generator Dashboard
+            Oracle Dashboard
           </CardTitle>
           <CardDescription className="text-base sm:text-lg text-slate-400 mt-2">
             Create new explanations or view your existing ones.
@@ -286,10 +286,7 @@ export default function DashboardPage() {
       </Card>
 
       <footer className="text-center py-8 text-slate-500 text-sm">
-        <p>
-          &copy; {new Date().getFullYear()} Celebrity Explainer. All rights
-          reserved.
-        </p>
+        <p>&copy; {new Date().getFullYear()} Oracle. All rights reserved.</p>
         <p>Powered by AI magic.</p>
       </footer>
     </div>
