@@ -61,6 +61,11 @@ def create_explanatory_visuals(transcription, output_dir):
     
     return final_video
 
+# create fake visual
+def create_fake_explanatory_visuals():
+    return "/Users/jetjadeja/Projects/work/sieve/celebxplain/server/data/results/eaf92934-87e6-4fd4-a200-77e6378566ad/final_visuals.mp4"
+
+
 # Create the visual plan
 def create_visual_plan(transcription):
     dotenv.load_dotenv()

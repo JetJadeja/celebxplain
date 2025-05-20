@@ -10,7 +10,7 @@ from services.llm_service import generate_explanation
 from services.tts_service import generate_speech
 from services.sieve_service import create_celebrity_video
 from services.video_service import assemble_final_video
-from services.visuals_service import create_explanatory_visuals
+from services.visuals_service import create_explanatory_visuals, create_fake_explanatory_visuals
 
 @shared_task
 def process_job(job_id, persona_id, query):
@@ -28,33 +28,55 @@ def process_job(job_id, persona_id, query):
         os.makedirs(results_dir, exist_ok=True)
 
         # Step 1: Generate explanation content
-        explanation = generate_explanation(persona_id, query)
+        # explanation = generate_explanation(persona_id, query)
         update_job_status(job_id, "processing", "Generated explanation content")
         
         # Step 2: Text-to-speech conversion
-        speech_file, transcription = generate_speech(job_id, persona_id, explanation, results_dir)
+        # speech_file, transcription = generate_speech(job_id, persona_id, explanation, results_dir)
+        speech_file = "/Users/jetjadeja/Projects/work/sieve/celebxplain/server/data/results/eaf92934-87e6-4fd4-a200-77e6378566ad/speech.mp3"
+        transcription = [
+            {
+                "text": "Hey there, I'm Steve Jobs and today we're going to learn about why computers are cool.  Computers are cool because they are fast and can let you do things that are dope as hell.",
+                "language_code": "en",
+                "segments": [
+                {
+                    "start": 0.06,
+                    "end": 5.0,
+                    "text": " Hey there, I'm Steve Jobs and today we're going to learn about why computers are cool."
+                },
+                {
+                    "start": 5.18,
+                    "end": 11.28,
+                    "text": " Computers are cool because they are fast and can let you do things that are dope as hell."
+                }
+                ]
+            }
+        ]
+
         update_job_status(job_id, "processing", "Generated speech")
 
         # Steps 3 & 4: Parallel processing for efficiency
         update_job_status(job_id, "processing", "Generating visuals content")
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             # Launch both tasks simultaneously
-            celeb_task = executor.submit(
-                create_celebrity_video,
-                persona_id,
-                speech_file,
-                results_dir
-            )
+            # celeb_task = executor.submit(
+            #     create_celebrity_video,
+            #     persona_id,
+            #     speech_file,
+            #     results_dir
+            # )
             
-            visuals_task = executor.submit(
-                create_explanatory_visuals,
-                transcription,
-                results_dir
-            )
+            # visuals_task = executor.submit(
+            #     create_explanatory_visuals,
+            #     transcription,
+            #     results_dir
+            # )
             
             # Wait for both to complete
-            celeb_video = celeb_task.result()
-            visual_elements = visuals_task.result()
+            # celeb_video = celeb_task.result()
+            # visual_elements = visuals_task.result()
+            celeb_video = "/Users/jetjadeja/Projects/work/sieve/celebxplain/server/data/results/eaf92934-87e6-4fd4-a200-77e6378566ad/lip_synced_video.mp4"
+            visual_elements = create_fake_explanatory_visuals()
             update_job_status(job_id, "processing", "Generated visuals")
         
         # Step 5: Final video production
