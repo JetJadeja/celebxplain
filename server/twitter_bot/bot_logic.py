@@ -5,22 +5,11 @@ import json
 import time
 import threading # For running poll_job_statuses in a separate thread
 
-# Attempt to import project-specific modules
-# These paths assume bot_logic.py is in server/twitter_bot/
-try:
-    from . import twitter_client
-    from . import request_parser
-    from ..utils.db import create_job as db_create_job_direct, get_job as db_get_job_direct
-    from ..celery_app import celery_app as celery_app_direct
-except ImportError as e:
-    logging.error(f"Error importing modules: {e}. Ensure paths are correct and __init__.py files exist.")
-    # Fallback for cases where direct execution might be attempted or structure is different
-    # This is not ideal for production but helps if running script directly for tests initially
-    import twitter_client
-    import request_parser
-    # For utils.db and celery_app, direct relative imports are tricky if not run as part of a package
-    # We will assume for now they are correctly imported when run in the main application context
-    pass 
+# Imports assuming 'server/' is in sys.path, as configured by main.py
+from twitter_bot import twitter_client
+from twitter_bot import request_parser
+from utils.db import create_job as db_create_job_direct, get_job as db_get_job_direct, update_job_status as db_update_job_status_direct
+from celery_app import celery_app as celery_app_direct
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -102,15 +91,15 @@ def handle_mention(tweet):
 
     # 3. Handle parsing errors
     if error_message:
-        logger.warning(f"Error parsing tweet {tweet.id}: {error_message}")
+        logger.warning(f"Error parsing tweet {tweet.id}: {error_message}. No reply will be sent for this error.")
         # Construct a more user-friendly error message
-        reply_error_message = f"Sorry, I couldn't quite understand that. Error: {error_message}. Try format: @BotHandle explain TOPIC by CELEBRITY_NAME"
-        twitter_client.post_reply(tweet.id, reply_error_message)
+        # reply_error_message = f"Sorry, I couldn't quite understand that. Error: {error_message}. Try format: @BotHandle explain TOPIC by CELEBRITY_NAME"
+        # twitter_client.post_reply(tweet.id, reply_error_message)
         return
     
     if not topic or not persona_id:
-        logger.warning(f"Parsing tweet {tweet.id} did not yield topic or persona_id. Topic: {topic}, Persona ID: {persona_id}")
-        twitter_client.post_reply(tweet.id, "Sorry, I couldn't identify both a topic and a celebrity. Please be specific!")
+        logger.warning(f"Parsing tweet {tweet.id} did not yield topic or persona_id. Topic: {topic}, Persona ID: {persona_id}. No reply will be sent.")
+        # twitter_client.post_reply(tweet.id, "Sorry, I couldn't identify both a topic and a celebrity. Please be specific!")
         return
 
     persona_name = persona_name_map.get(persona_id, "the selected celebrity")
@@ -122,11 +111,11 @@ def handle_mention(tweet):
     # 5. Create job in the main database (e.g., Redis/Postgres)
     try:
         # Assuming db_create_job_direct is available and imported
-        db_create_job_direct(job_id=job_id, persona_id=persona_id, query=topic, status="pending")
-        logger.info(f"Successfully created job {job_id} in main database for topic '{topic}' by {persona_name}.")
+        # create_job in db.py automatically sets initial status to 'created'
+        db_create_job_direct(job_id=job_id, persona_id=persona_id, query=topic)
+        logger.info(f"Successfully created job {job_id} in main database for topic '{topic}' by {persona_name}. Initial status: 'created'.")
     except Exception as e:
         logger.error(f"Failed to create job {job_id} in database: {e}")
-        twitter_client.post_reply(tweet.id, f"Sorry, I had an issue setting up your request for '{topic}' by {persona_name}. Please try again.")
         return
 
     # 6. Send task to Celery
@@ -134,16 +123,15 @@ def handle_mention(tweet):
         # Assuming celery_app_direct is available and imported
         celery_app_direct.send_task('tasks.job_tasks.process_job', args=[job_id, persona_id, topic])
         logger.info(f"Successfully sent task for job {job_id} to Celery.")
+        # Update job status to 'processing' or 'pending' after successful dispatch
+        db_update_job_status_direct(job_id=job_id, status="processing", message="Task sent to Celery for processing.")
+        logger.info(f"Updated job {job_id} status to 'processing' in database.")
     except Exception as e:
         logger.error(f"Failed to send task for job {job_id} to Celery: {e}")
-        # Potentially update DB job status to error here, or handle retry logic
-        db_create_job_direct(job_id=job_id, persona_id=persona_id, query=topic, status="error", error_message=f"Celery dispatch failed: {str(e)}")
-        twitter_client.post_reply(tweet.id, f"Sorry, I had an issue processing your request for '{topic}' by {persona_name} with our backend. Please try again.")
+        # Update DB job status to error here
+        db_update_job_status_direct(job_id=job_id, status="error", error=f"Celery dispatch failed: {str(e)}", message=f"Celery dispatch failed: {str(e)}")
+        logger.error(f"Updated job {job_id} status to 'error' in database due to Celery dispatch failure.")
         return
-
-    # 7. Post initial reply to Twitter
-    reply_text = f"Got it! I'll have {persona_name} explain '{topic}'. This might take a few minutes. Your Job ID is: {job_id}"
-    twitter_client.post_reply(tweet.id, reply_text)
 
     # 8. Store job tracking info locally (thread-safe)
     with jobs_cache_lock:

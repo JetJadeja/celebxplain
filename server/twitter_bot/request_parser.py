@@ -4,6 +4,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 import dotenv
 import logging
+from typing import Optional, Tuple
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,10 +26,10 @@ class TweetExtract(BaseModel):
     Pydantic model for structured LLM output.
     The LLM should extract the main topic and the celebrity mentioned.
     """
-    topic: str | None
-    celebrity_mention: str | None
+    topic: Optional[str]
+    celebrity_mention: Optional[str]
 
-def parse_tweet(tweet_text: str, personas_data: dict) -> tuple[str | None, str | None, str | None]:
+def parse_tweet(tweet_text: str, personas_data: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Parse tweet text to extract a topic and a mentioned celebrity.
 

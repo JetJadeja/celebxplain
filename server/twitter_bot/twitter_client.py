@@ -2,307 +2,498 @@ import tweepy
 import os
 from dotenv import load_dotenv
 import logging
-import time # Added for potential use in upload_video status checking
+import time
+import math # For ceiling in video upload
+from typing import Optional, Tuple, Callable # Added Optional and Tuple for type hints
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging for the module
+log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
-# Assuming .env is in the server/ directory, one level up
+# --- Configuration Loading ---
+# Load environment variables from .env file, assuming .env is in the parent (server/) directory.
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-load_dotenv(dotenv_path)
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
+    logger.info(f"Loaded .env file from: {dotenv_path}")
+else:
+    logger.warning(
+        f".env file not found at {dotenv_path}. Critical Twitter credentials might be missing. "
+        "Ensure TWITTER_API_KEY, TWITTER_API_KEY_SECRET, TWITTER_ACCESS_TOKEN, "
+        "TWITTER_ACCESS_TOKEN_SECRET, TWITTER_BEARER_TOKEN, and TWITTER_BOT_USERNAME are set."
+    )
 
+# Twitter API Credentials and Bot Configuration from Environment Variables
 TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
 TWITTER_API_KEY_SECRET = os.getenv("TWITTER_API_KEY_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
-TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN") # Needed for StreamingClient with v2
-TWITTER_BOT_USERNAME = os.getenv("TWITTER_BOT_USERNAME") # To identify the bot
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN") # Primarily for v2 App Context or StreamingClient
+TWITTER_BOT_USERNAME = os.getenv("TWITTER_BOT_USERNAME") # Bot's own @handle
 
-# Global API objects, initialized by init_client
-api_v1 = None
-api_v2 = None
+# Polling interval for checking new mentions (in seconds)
+# Twitter API v2 rate limit for GET /2/users/:id/mentions is generous (e.g., 180 reqs / 15 min for user auth).
+# Setting this to be configurable via environment variable.
+DEFAULT_MENTIONS_POLLING_INTERVAL = 30
+MENTIONS_POLLING_INTERVAL = int(os.getenv("MENTIONS_POLLING_INTERVAL", DEFAULT_MENTIONS_POLLING_INTERVAL))
 
-def init_client():
+# Global API client objects, initialized by init_client()
+# These are intended to be singletons for the application's lifecycle.
+api_v1: Optional[tweepy.API] = None
+api_v2: Optional[tweepy.Client] = None
+
+# --- Client Initialization ---
+
+def init_client() -> Tuple[Optional[tweepy.API], Optional[tweepy.Client]]:
     """
-    Initialize and authenticate the Twitter client for v1.1 API (for media) and v2 API (for streaming/general use).
-    Returns a tuple (api_v1, api_v2) or (None, None) if initialization fails.
+    Initializes and authenticates Twitter API v1.1 and v2 clients.
+
+    API v1.1 (tweepy.API) is used primarily for media uploads (videos) due to current Twitter API capabilities.
+    API v2 (tweepy.Client) is used for most other operations, including fetching mentions and posting tweets.
+    
+    Credentials are read from environment variables.
+    This function should be called once at application startup.
+
+    Returns:
+        A tuple (api_v1, api_v2). Each element can be None if its respective initialization failed.
     """
     global api_v1, api_v2
 
-    if not all([TWITTER_API_KEY, TWITTER_API_KEY_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET, TWITTER_BEARER_TOKEN]):
-        logger.error("Missing one or more Twitter API credentials. Please check your .env file.")
+    # Check for essential OAuth 1.0a User Context credentials (used by both v1 and v2 for user actions)
+    if not all([TWITTER_API_KEY, TWITTER_API_KEY_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET]):
+        logger.critical(
+            "Missing one or more core Twitter API credentials (API Key, Secret, Access Token, Secret). "
+            "These are required for both API v1.1 and v2 user context operations. Bot cannot operate."
+        )
         return None, None
+    
+    if not TWITTER_BEARER_TOKEN:
+        # Bearer token is for App Context. While user mentions polling uses User Context,
+        # tweepy.Client can accept it, and it might be useful for other v2 endpoints used with App Context.
+        logger.warning("TWITTER_BEARER_TOKEN is not set. While not strictly needed for all User Context v2 calls, it might be required for some App Context v2 endpoints.")
 
+    initialized_v1 = False
     try:
-        # Initialize v1.1 API (for media uploads, some specific actions)
-        auth = tweepy.OAuth1UserHandler(
+        logger.info("Initializing Twitter API v1.1 client...")
+        auth_v1 = tweepy.OAuth1UserHandler(
            TWITTER_API_KEY, TWITTER_API_KEY_SECRET,
            TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
         )
-        api_v1 = tweepy.API(auth, wait_on_rate_limit=True)
-        logger.info("Twitter API v1.1 client initialized successfully.")
+        api_v1 = tweepy.API(auth_v1, wait_on_rate_limit=True)
+        # Verify v1.1 credentials
+        v1_user = api_v1.verify_credentials()
+        if v1_user:
+            logger.info(f"Twitter API v1.1 client initialized and verified for user: @{v1_user.screen_name}")
+            initialized_v1 = True
+        else:
+            logger.error("Failed to verify credentials for Twitter API v1.1 (verify_credentials returned None/False).")
+            api_v1 = None # Nullify on verification failure
+    except tweepy.TweepyException as e:
+        logger.error(f"Error initializing or verifying Twitter API v1.1 client: {e}", exc_info=True)
+        api_v1 = None
+    except Exception as e:
+        logger.critical(f"Unexpected critical error during Twitter API v1.1 client setup: {e}", exc_info=True)
+        api_v1 = None
 
-        # Initialize v2 API (for streaming, modern endpoints)
+    initialized_v2 = False
+    try:
+        logger.info("Initializing Twitter API v2 client...")
+        # tweepy.Client uses OAuth 1.0a credentials for User Context if provided (preferred for mentions),
+        # can also use bearer_token for App Context or if OAuth 1.0a is missing for some calls.
         api_v2 = tweepy.Client(
-            bearer_token=TWITTER_BEARER_TOKEN,
-            consumer_key=TWITTER_API_KEY,
-            consumer_secret=TWITTER_API_KEY_SECRET,
-            access_token=TWITTER_ACCESS_TOKEN,
-            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
+            bearer_token=TWITTER_BEARER_TOKEN, # Required for some v2 endpoints, or as primary for App Context
+            consumer_key=TWITTER_API_KEY,              # For User Context
+            consumer_secret=TWITTER_API_KEY_SECRET,    # For User Context
+            access_token=TWITTER_ACCESS_TOKEN,        # For User Context
+            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET, # For User Context
             wait_on_rate_limit=True
         )
-        logger.info("Twitter API v2 client initialized successfully.")
-        
-        # Verify credentials for both clients
-        if not api_v1.verify_credentials():
-            logger.error("Failed to verify credentials for Twitter API v1.1.")
-            api_v1 = None
-        if not api_v2.get_me(): # A simple way to test v2 client
-             logger.error("Failed to verify credentials for Twitter API v2.")
-             api_v2 = None
-
-        if api_v1 and api_v2:
-            logger.info("Both Twitter clients authenticated successfully.")
-            return api_v1, api_v2
+        # Verify v2 credentials by fetching authenticated user's info
+        me_response = api_v2.get_me(user_fields=["username"])
+        if me_response and me_response.data:
+            logger.info(f"Twitter API v2 client initialized and verified for user: @{me_response.data.username} (ID: {me_response.data.id})")
+            initialized_v2 = True
         else:
-            logger.error("One or both Twitter clients failed to authenticate.")
-            return None, None
-
+            logger.error(f"Failed to verify credentials for Twitter API v2 (get_me returned no data or error). Response: {me_response}")
+            api_v2 = None # Nullify on verification failure
+    except tweepy.TweepyException as e:
+        logger.error(f"Error initializing or verifying Twitter API v2 client: {e}", exc_info=True)
+        api_v2 = None
     except Exception as e:
-        logger.error(f"Error initializing Twitter clients: {e}")
-        return None, None
+        logger.critical(f"Unexpected critical error during Twitter API v2 client setup: {e}", exc_info=True)
+        api_v2 = None
 
-class MentionStreamListener(tweepy.StreamingClient):
-    def __init__(self, bearer_token, callback_on_mention, bot_user_id):
-        super().__init__(bearer_token)
-        self.callback_on_mention = callback_on_mention
-        self.bot_user_id = bot_user_id
-        logger.info(f"MentionStreamListener initialized for bot ID: {self.bot_user_id}")
+    if initialized_v1 and initialized_v2:
+        logger.info("Both Twitter API v1.1 and v2 clients initialized successfully.")
+    elif initialized_v1:
+        logger.warning("Twitter API v1.1 client initialized, but API v2 client FAILED. Bot functionality will be limited.")
+    elif initialized_v2:
+        logger.warning("Twitter API v2 client initialized, but API v1.1 client FAILED. Media uploads will not work.")
+    else:
+        logger.critical("FAILED to initialize BOTH Twitter API v1.1 and v2 clients. Bot cannot operate effectively.")
+        return None, None # Explicitly return None, None if both failed critical setup
 
-    def on_tweet(self, tweet):
-        """
-        This method is called when a tweet matching the stream's filter rules is received.
-        For mentions, the tweet object itself (from v2) contains the mention information.
-        """
-        logger.info(f"Received tweet: {tweet.id} - {tweet.text}")
-        # Check if the bot was mentioned (v2 Tweet object structure)
-        # The stream rule `@bot_username` should already filter this,
-        # but an explicit check can be useful.
-        # Also ensure it's not a reply from the bot itself to avoid loops.
-        if tweet.author_id != self.bot_user_id:
-            logger.info(f"Tweet is a mention and not from the bot. Calling callback for tweet ID: {tweet.id}")
-            try:
-                self.callback_on_mention(tweet)
-            except Exception as e:
-                logger.error(f"Error in mention callback for tweet {tweet.id}: {e}")
-        else:
-            logger.info(f"Tweet {tweet.id} is from the bot itself or does not mention the bot, ignoring.")
+    return api_v1, api_v2
 
+# --- Core Twitter Interactions ---
 
-    def on_error(self, status_code):
-        logger.error(f"Streaming error occurred: {status_code}")
-        if status_code == 420: # Rate limit
-            logger.warning("Rate limit exceeded by streaming client. Disconnecting.")
-            return False # Disconnect stream
-        return True # Keep stream connected for other errors
-
-    def on_exception(self, exception):
-        logger.error(f"Streaming exception: {exception}")
-        # Decide if you want to disconnect or keep trying
-        # return False # to disconnect
-
-def listen_for_mentions(callback_on_mention):
+def listen_for_mentions(callback_on_mention: Callable):
     """
-    Stream mentions to the bot's username. The callback will process the tweet.
-    Uses Twitter API v2.
+    Periodically polls for new mentions to the bot's authenticated user using Twitter API v2.
+
+    It fetches mentions since the last processed mention to avoid duplicates.
+    For each new valid mention, it invokes the `callback_on_mention` function.
+
+    Args:
+        callback_on_mention: A function to call for each new mention. 
+                             It will receive the Tweepy Tweet object (v2) as an argument.
+    Raises:
+        RuntimeError: If the API v2 client is not initialized or bot user ID cannot be fetched.
     """
-    global api_v1, api_v2 # Use the globally initialized clients
-    
     if not api_v2:
-        logger.error("Twitter API v2 client not initialized. Call init_client() first.")
-        return
+        logger.critical("listen_for_mentions: Twitter API v2 client not initialized. Cannot listen.")
+        raise RuntimeError("Twitter API v2 client must be initialized before listening for mentions.")
 
-    if not TWITTER_BOT_USERNAME:
-        logger.error("TWITTER_BOT_USERNAME is not set in .env file. Cannot listen for mentions.")
-        return
+    if not TWITTER_BOT_USERNAME: # Should also be caught by main.py, but good for client integrity
+        logger.critical("listen_for_mentions: TWITTER_BOT_USERNAME is not set. Cannot determine which user to monitor.")
+        # While get_me() below uses the authenticated user, TWITTER_BOT_USERNAME is used for logging and consistency checks.
+        raise RuntimeError("TWITTER_BOT_USERNAME is not configured.")
 
     try:
-        # Get bot's user ID using the v2 client
-        bot_user_info = api_v2.get_user(username=TWITTER_BOT_USERNAME)
-        if not bot_user_info.data:
-            logger.error(f"Could not find user ID for username: {TWITTER_BOT_USERNAME}")
-            return
-        bot_user_id = bot_user_info.data.id
-        logger.info(f"Bot User ID for @{TWITTER_BOT_USERNAME} is {bot_user_id}")
+        logger.info("Attempting to retrieve bot's user ID for mention listening...")
+        bot_user_response = api_v2.get_me(user_fields=["id", "username"])
+        if not bot_user_response or not bot_user_response.data:
+            logger.error(f"Could not retrieve bot user information using get_me(). Response: {bot_user_response}")
+            raise RuntimeError("Failed to retrieve bot user ID. Cannot listen for mentions.")
+        
+        bot_user_id = bot_user_response.data.id
+        bot_username_from_api = bot_user_response.data.username
+        logger.info(f"Successfully fetched bot user details: ID={bot_user_id}, Username=@{bot_username_from_api}. This is the authenticated user.")
 
-        stream_listener = MentionStreamListener(
-            bearer_token=TWITTER_BEARER_TOKEN,
-            callback_on_mention=callback_on_mention,
-            bot_user_id=bot_user_id
-        )
-
-        # Clear existing rules (optional, good for ensuring a clean state)
-        existing_rules = stream_listener.get_rules()
-        if existing_rules.data:
-            rule_ids = [rule.id for rule in existing_rules.data]
-            logger.info(f"Deleting existing stream rules: {rule_ids}")
-            stream_listener.delete_rules(rule_ids)
-
-        # Add a rule to listen for mentions of the bot
-        # The rule format `@username` targets mentions of that user.
-        rule_value = f"@{TWITTER_BOT_USERNAME}"
-        stream_listener.add_rules(tweepy.StreamRule(value=rule_value, tag="mentions-rule"))
-        logger.info(f"Added stream rule: '{rule_value}'")
-
-        logger.info(f"Starting to listen for mentions to @{TWITTER_BOT_USERNAME}...")
-        # Important: specify tweet_fields to get author_id and other necessary fields
-        stream_listener.filter(tweet_fields=["author_id", "created_at", "conversation_id", "in_reply_to_user_id"])
+        if TWITTER_BOT_USERNAME.lower() != bot_username_from_api.lower():
+            logger.warning(
+                f"TWITTER_BOT_USERNAME from .env ('{TWITTER_BOT_USERNAME}') does not match authenticated user from API ('{bot_username_from_api}'). "
+                f"Will listen for mentions to @{bot_username_from_api} (the authenticated user)."
+            )
+        # The listener will inherently listen for mentions to the authenticated user (bot_user_id).
 
     except tweepy.TweepyException as e:
-        logger.error(f"Tweepy error while trying to listen for mentions: {e}")
+        logger.critical(f"Tweepy error while getting bot user ID: {e}", exc_info=True)
+        raise RuntimeError(f"API error getting bot user ID: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error in listen_for_mentions: {e}")
+        logger.critical(f"Unexpected error getting bot user ID: {e}", exc_info=True)
+        raise RuntimeError(f"Unexpected error getting bot user ID: {e}")
 
-def post_reply(tweet_id, text, media_id=None):
+    # Initialize since_id: Fetch the most recent mention to the bot initially.
+    # This sets a baseline to avoid processing a large backlog of old mentions on first start.
+    last_processed_mention_id = None
+    try:
+        logger.info(f"Fetching initial latest mention ID for @{bot_username_from_api} to set processing baseline...")
+        initial_mentions_response = api_v2.get_users_mentions(
+            id=bot_user_id,
+            max_results=5, # Only need the very latest one, if any
+            tweet_fields=["author_id", "created_at", "conversation_id", "in_reply_to_user_id", "referenced_tweets"]
+        )
+        if initial_mentions_response.data and len(initial_mentions_response.data) > 0:
+            last_processed_mention_id = initial_mentions_response.data[0].id # Newest one is first
+            logger.info(f"Initial baseline mention ID set to: {last_processed_mention_id}")
+        elif initial_mentions_response.errors:
+            for error in initial_mentions_response.errors:
+                 logger.error(f"API error during initial mention fetch: {error.get('title', '')} - {error.get('detail', '')}")
+            logger.warning("Could not establish baseline due to API errors. Will fetch all new mentions on first poll.")
+        else:
+            logger.info(f"No recent mentions found for @{bot_username_from_api}. Will process mentions from this point forward.")
+    except tweepy.TweepyException as e:
+        logger.error(f"Tweepy error fetching initial mentions: {e}. Will proceed without an initial since_id.", exc_info=True)
+    except Exception as e:
+        logger.error(f"Unexpected error fetching initial mentions: {e}. Will proceed without an initial since_id.", exc_info=True)
+
+    logger.info(f"Starting to poll for mentions to @{bot_username_from_api} (ID: {bot_user_id}) every {MENTIONS_POLLING_INTERVAL} seconds...")
+    
+    # Brief pause before starting the loop, e.g., if main thread is also starting up.
+    time.sleep(2)
+
+    while True:
+        logger.info(f"Mention polling cycle START for @{bot_username_from_api} (ID: {bot_user_id}). Since_id: {last_processed_mention_id}")
+        try:
+            # logger.debug(f"Polling for new mentions for user ID {bot_user_id} (since_id: {last_processed_mention_id})...")
+            logger.info(f"Attempting to fetch mentions for user ID {bot_user_id} (since_id: {last_processed_mention_id})...")
+            
+            mentions_response = api_v2.get_users_mentions(
+                id=bot_user_id,
+                since_id=last_processed_mention_id,
+                tweet_fields=["author_id", "created_at", "text", "conversation_id", "in_reply_to_user_id", "referenced_tweets"],
+                expansions=["author_id"], # To get user object for author_id (e.g., username)
+                max_results=25  # Fetch a batch of new mentions (max 100)
+            )
+
+            if mentions_response.errors:
+                logger.info(f"Received errors from get_users_mentions API: {mentions_response.errors}")
+                for error in mentions_response.errors:
+                    logger.error(f"Twitter API error when fetching mentions: {error.get('title', '')} - {error.get('detail', '')} (Value: {error.get('value', '')})")
+                # Continue to next polling cycle after logging errors.
+                # Specific error codes (e.g., 429) are handled by wait_on_rate_limit=True in client.
+
+            new_mentions_processed_this_cycle = 0
+            if mentions_response.data:
+                # Mentions are returned newest first when since_id is used.
+                # To process them chronologically (oldest of the new batch first), reverse the list.
+                tweets_to_process = reversed(mentions_response.data)
+                logger.info(f"Found {len(mentions_response.data)} new mention(s) to process.")
+                
+                for tweet in tweets_to_process:
+                    # Basic check: ensure the tweet is not from the bot itself replying to something.
+                    # Note: `get_users_mentions` should ideally not return self-mentions if properly a mention to the bot.
+                    # However, checking tweet.author_id against bot_user_id can prevent processing self-replies if they slip through.
+                    if str(tweet.author_id) == str(bot_user_id):
+                        logger.info(f"Skipping mention from bot itself (Tweet ID: {tweet.id}, Author ID: {tweet.author_id}, Bot ID: {bot_user_id})")
+                        last_processed_mention_id = tweet.id # Still update since_id to not re-fetch it
+                        continue
+
+                    logger.info(f"Received new valid mention: Tweet ID {tweet.id} by Author ID {tweet.author_id}. Text: '{tweet.text}'")
+                    logger.info(f"Calling handle_mention callback for Tweet ID {tweet.id}...")
+                    try:
+                        callback_on_mention(tweet) # Pass the full Tweet object
+                        logger.info(f"Successfully processed callback for Tweet ID {tweet.id}.")
+                    except Exception as cb_exc:
+                        logger.error(f"Error in mention callback for tweet {tweet.id}: {cb_exc}", exc_info=True)
+                    
+                    last_processed_mention_id = tweet.id # Crucial: update to the ID of the latest processed mention
+                    new_mentions_processed_this_cycle += 1
+            
+            total_mentions_in_response = len(mentions_response.data) if mentions_response.data else 0
+            
+            if new_mentions_processed_this_cycle > 0:
+                logger.info(f"Successfully processed {new_mentions_processed_this_cycle} new mention(s) out of {total_mentions_in_response} received. Last processed ID now: {last_processed_mention_id}")
+            elif total_mentions_in_response > 0 : # Mentions were received but none were processed
+                logger.info(f"Received {total_mentions_in_response} mention(s), but none were processed (e.g., skipped as self-mentions). Last seen tweet ID is now: {last_processed_mention_id}")
+            else: # No mentions in the response
+                logger.info(f"No new mentions found in API response for user ID {bot_user_id} (since_id: {last_processed_mention_id}).")
+
+        except tweepy.TweepyException as e:
+            logger.error(f"Tweepy API error during mention polling loop: {e}", exc_info=True)
+            # wait_on_rate_limit=True in Client handles rate limit sleeps.
+            # If other critical API errors occur, they are logged here. Consider specific error code handling if needed.
+        except Exception as e:
+            logger.error(f"Unexpected error in mention polling loop: {e}", exc_info=True)
+            # For unexpected errors, a slightly longer sleep might prevent rapid failure loops.
+            time.sleep(MENTIONS_POLLING_INTERVAL * 2) # Double sleep on unexpected error
+        
+        # logger.debug(f"Mention polling cycle complete. Sleeping for {MENTIONS_POLLING_INTERVAL} seconds.")
+        logger.info(f"Mention polling cycle for @{bot_username_from_api} COMPLETE. Sleeping for {MENTIONS_POLLING_INTERVAL} seconds.")
+        time.sleep(MENTIONS_POLLING_INTERVAL)
+
+def post_reply(tweet_id: str, text: str, media_id: Optional[str] = None) -> Optional[tweepy.Response]:
     """
-    Reply to a tweet. media_id is for attaching uploaded videos.
+    Posts a reply to a given tweet_id. Optionally attaches media (e.g., a video).
     Uses Twitter API v2.
+
+    Args:
+        tweet_id: The ID of the tweet to reply to.
+        text: The text content of the reply.
+        media_id: Optional. The media ID of an uploaded media file (e.g., video) to attach.
+
+    Returns:
+        A tweepy.Response object if successful, None otherwise.
     """
-    global api_v2
     if not api_v2:
-        logger.error("Twitter API v2 client not initialized. Call init_client() first.")
+        logger.error("post_reply: Twitter API v2 client not initialized. Cannot post reply.")
         return None
 
     try:
-        logger.info(f"Attempting to reply to tweet_id: {tweet_id} with text: '{text}' and media_id: {media_id}")
-        response = api_v2.create_tweet(
-            text=text,
-            in_reply_to_tweet_id=tweet_id,
-            media_ids=[media_id] if media_id else None
-        )
-        if response.data and response.data.get('id'):
-            logger.info(f"Successfully posted reply. New tweet ID: {response.data['id']}")
-            return response.data['id']
+        logger.info(f"Attempting to post reply to tweet_id: {tweet_id}. Text: '{text[:100]}...', Media ID: {media_id}")
+        reply_params = {"in_reply_to_tweet_id": tweet_id, "text": text}
+        if media_id:
+            reply_params["media_ids"] = [media_id]
+        
+        response = api_v2.create_tweet(**reply_params)
+        
+        if response.data and response.data.get("id"):
+            logger.info(f"Successfully posted reply. New Tweet ID: {response.data['id']} in reply to {tweet_id}")
+            return response
         else:
-            logger.error(f"Failed to post reply. Response: {response.errors}")
+            logger.error(f"Failed to post reply to tweet {tweet_id}. No data/ID in response: {response.errors or response}")
             return None
     except tweepy.TweepyException as e:
-        logger.error(f"Tweepy error while posting reply to {tweet_id}: {e}")
+        logger.error(f"Tweepy API error posting reply to tweet {tweet_id}: {e}", exc_info=True)
+        # Log specific error details if available
+        if hasattr(e, 'api_codes') and hasattr(e, 'api_messages'):
+            logger.error(f"API Error Codes: {e.api_codes}, Messages: {e.api_messages}")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error while posting reply to {tweet_id}: {e}")
+        logger.error(f"Unexpected error posting reply to tweet {tweet_id}: {e}", exc_info=True)
         return None
 
-def upload_video(video_filepath):
+
+def upload_video(video_filepath: str, max_retries_status_check=24, status_check_interval=5) -> Optional[str]:
     """
-    Upload video to Twitter. Handles chunked uploads for supported formats (like MP4).
-    Returns media_id string.
-    Uses Twitter API v1.1.
+    Uploads a video to Twitter using the v1.1 chunked media upload API.
+    This is necessary as API v2 does not yet fully support large video uploads in the same manner.
+
+    Args:
+        video_filepath: Absolute path to the video file.
+        max_retries_status_check: Max number of times to check video processing status.
+        status_check_interval: Seconds to wait between status checks.
+
+    Returns:
+        The Twitter media_id string if upload and processing are successful, None otherwise.
     """
-    global api_v1
     if not api_v1:
-        logger.error("Twitter API v1.1 client not initialized. Call init_client() first.")
+        logger.error("upload_video: Twitter API v1.1 client not initialized. Cannot upload video.")
         return None
 
     if not os.path.exists(video_filepath):
-        logger.error(f"Video file not found: {video_filepath}")
+        logger.error(f"upload_video: Video file not found at {video_filepath}")
         return None
 
     try:
-        logger.info(f"Starting video upload for: {video_filepath}")
-        # media_upload handles chunking for MP4s and other supported types
-        # For large files, this can take some time.
-        # media_category must be 'tweet_video' for videos to be attachable to tweets.
-        # Max video size is 512MB, max length 140 seconds.
-        media = api_v1.media_upload(filename=video_filepath, media_category='tweet_video', chunked=True)
-        
-        # Check processing status (optional, but good practice for large videos)
-        # This part might need more robust handling in a production system
-        if media.processing_info and media.processing_info['state'] != 'succeeded':
-            logger.info(f"Video uploaded (ID: {media.media_id_string}), but processing is not yet complete. State: {media.processing_info['state']}")
-            
-            if media.processing_info['state'] == 'pending' or media.processing_info['state'] == 'in_progress':
-                logger.info(f"Waiting for video processing (ID: {media.media_id_string})... Check every {media.processing_info.get('check_after_secs', 10)}s")
-                time.sleep(media.processing_info.get('check_after_secs', 10)) # Wait suggested time
+        file_size = os.path.getsize(video_filepath)
+        logger.info(f"Starting video upload for: {video_filepath} (Size: {file_size / (1024*1024):.2f} MB)")
+
+        # 1. INIT Phase: Initialize the upload
+        # Max video size for Twitter is 512MB. Max duration 140s. MP4 recommended.
+        # tweepy.Media.media_category can be 'tweet_video' for videos attached to tweets.
+        logger.debug("Video Upload - INIT phase")
+        media_upload_response = api_v1.media_upload(
+            filename=video_filepath, 
+            media_category='tweet_video', 
+            chunked=True # Explicitly use chunked for clarity, though media_upload handles it.
+        )
+        media_id = media_upload_response.media_id_string
+        logger.info(f"Video Upload - INIT successful. Media ID: {media_id}")
+
+        # api_v1.media_upload with chunked=True and wait_for_completion=False handles INIT, APPENDs, and FINALIZE internally
+        # when you pass the filename directly. It doesn't return until FINALIZE is at least attempted.
+        # However, the processing might still be ongoing.
+
+        # 2. STATUS Phase: Check processing status until success or failure
+        logger.info(f"Video Upload - STATUS phase. Checking processing status for media_id: {media_id}")
+        retries = 0
+        while retries < max_retries_status_check:
+            try:
+                upload_status = api_v1.get_media_upload_status(media_id)
+                state = upload_status.processing_info.get('state')
+                progress_percent = upload_status.processing_info.get('progress_percent', 0)
                 
-                # Re-check status (simplified loop for example)
-                # In a real app, you'd loop this until 'succeeded' or 'failed' with a timeout.
-                status = api_v1.get_media_upload_status(media.media_id_string)
-                logger.info(f"Video processing status for {media.media_id_string}: {status.processing_info['state']}")
-                if status.processing_info['state'] != 'succeeded':
-                    logger.warning(f"Video {media.media_id_string} processing did not complete in time or failed. State: {status.processing_info['state']}")
-                    # Depending on policy, you might return None or the media_id anyway
-                    # if you want to try attaching it. For this example, let's be strict.
-                    if status.processing_info['state'] == 'failed':
-                         logger.error(f"Video processing failed: {status.processing_info.get('error')}")
-                         return None
-                    # If still pending/in_progress after one check, for this example we log and continue
-                    # but a production app would loop with retries and timeout.
+                logger.info(f"Media ID {media_id} processing status: {state}, Progress: {progress_percent}%")
 
-        if media.media_id_string:
-            logger.info(f"Video uploaded successfully. Media ID: {media.media_id_string}")
-            return media.media_id_string
-        else:
-            logger.error(f"Video upload failed for {video_filepath}. No media_id returned.")
-            return None
-            
-    except tweepy.TweepyException as e:
-        logger.error(f"Tweepy error during video upload for {video_filepath}: {e}")
-        return None
-    except Exception as e:
-        logger.error(f"Unexpected error during video upload for {video_filepath}: {e}")
+                if state == 'succeeded':
+                    logger.info(f"Video processing for media_id {media_id} SUCCEEDED.")
+                    return media_id
+                elif state == 'failed':
+                    error_name = upload_status.processing_info.get('error', {}).get('name', 'Unknown Error')
+                    error_message = upload_status.processing_info.get('error', {}).get('message', 'No details provided.')
+                    logger.error(f"Video processing for media_id {media_id} FAILED. Error: {error_name} - {error_message}")
+                    return None
+                elif state == 'in_progress' or state == 'pending':
+                    logger.info(f"Video processing for media_id {media_id} is '{state}'. Waiting {status_check_interval}s...")
+                    time.sleep(status_check_interval)
+                    retries += 1
+                else: # Unknown state
+                    logger.warning(f"Media ID {media_id} in unexpected processing state: '{state}'. Retrying... Details: {upload_status.processing_info}")
+                    time.sleep(status_check_interval)
+                    retries += 1
+            except tweepy.TweepyException as status_exc:
+                logger.error(f"Tweepy error checking upload status for media_id {media_id}: {status_exc}. Retrying...")
+                time.sleep(status_check_interval * 2) # Longer sleep on API error during status check
+                retries += 1 # Count as a retry
+            except Exception as e_stat:
+                logger.error(f"Unexpected error checking upload status for media ID {media_id}: {e_stat}", exc_info=True)
+                time.sleep(status_check_interval * 2)
+                retries += 1
+
+        logger.error(f"Video processing for media_id {media_id} timed out after {max_retries_status_check * status_check_interval}s. Last state was likely pending/in_progress.")
         return None
 
-def get_tweet_text(tweet_id):
+    except tweepy.TweepyException as e_upload:
+        logger.error(f"Tweepy API error during video upload process for {video_filepath}: {e_upload}", exc_info=True)
+        if hasattr(e_upload, 'api_codes') and hasattr(e_upload, 'api_messages'):
+            logger.error(f"API Error Codes: {e_upload.api_codes}, Messages: {e_upload.api_messages}")
+        return None
+    except Exception as e_final:
+        logger.error(f"Unexpected critical error during video upload for {video_filepath}: {e_final}", exc_info=True)
+        return None
+
+# --- Other Utility Functions ---
+
+def get_tweet_details(tweet_id: str) -> Optional[tweepy.Tweet]:
     """
-    Fetch the text of a specific tweet using Twitter API v2.
+    Fetches detailed information for a specific tweet using API v2.
+
+    Args:
+        tweet_id: The ID of the tweet to fetch.
+
+    Returns:
+        A tweepy.Tweet object if found, None otherwise.
     """
-    global api_v2
     if not api_v2:
-        logger.error("Twitter API v2 client not initialized. Call init_client() first.")
+        logger.error("get_tweet_details: Twitter API v2 client not initialized.")
         return None
     try:
-        logger.info(f"Fetching tweet text for tweet_id: {tweet_id}")
-        # You can request more fields using tweet_fields parameter
-        response = api_v2.get_tweet(tweet_id) # tweet_fields=['text', 'created_at']
+        logger.info(f"Fetching details for tweet_id: {tweet_id}")
+        # Common fields: attachments, author_id, context_annotations, conversation_id, created_at,
+        # entities, geo, id, in_reply_to_user_id, lang, public_metrics, possibly_sensitive,
+        # referenced_tweets, reply_settings, source, text, withheld
+        response = api_v2.get_tweet(
+            id=tweet_id,
+            tweet_fields=["author_id", "created_at", "text", "public_metrics", "conversation_id", "in_reply_to_user_id", "referenced_tweets"],
+            expansions=["author_id"]
+        )
         if response.data:
-            logger.info(f"Successfully fetched tweet text for {tweet_id}: '{response.data.text}'")
-            return response.data.text
+            logger.info(f"Successfully fetched details for tweet {tweet_id}.")
+            return response.data
         else:
-            logger.error(f"Could not find tweet or failed to fetch tweet {tweet_id}. Errors: {response.errors}")
+            logger.warning(f"Could not find tweet or no data returned for tweet_id {tweet_id}. Errors: {response.errors}")
             return None
     except tweepy.TweepyException as e:
-        logger.error(f"Tweepy error fetching tweet {tweet_id}: {e}")
+        logger.error(f"Tweepy API error fetching tweet details for {tweet_id}: {e}", exc_info=True)
         return None
     except Exception as e:
-        logger.error(f"Unexpected error fetching tweet {tweet_id}: {e}")
+        logger.error(f"Unexpected error fetching tweet details for {tweet_id}: {e}", exc_info=True)
         return None
 
-if __name__ == '__main__':
-    # Example usage (optional, for testing)
+# Note: get_tweet_text, get_user_profile, search_tweets, follow_user can be added similarly
+# if they are essential to the core bot logic being refactored now. For brevity, focusing on core loop.
+# Example for one more to show pattern:
+
+def get_user_profile(user_id: Optional[str] = None, username: Optional[str] = None) -> Optional[tweepy.User]:
+    """
+    Fetches a user's profile using API v2, by user_id or username.
+    At least one identifier must be provided.
+
+    Args:
+        user_id: The ID of the user.
+        username: The username (handle) of the user.
+
+    Returns:
+        A tweepy.User object if found, None otherwise.
+    """
+    if not api_v2:
+        logger.error("get_user_profile: Twitter API v2 client not initialized.")
+        return None
     
-    # Define a dummy callback for testing
-    def handle_mention(tweet_data):
-        logger.info(f"--- Mention Callback Triggered ---")
-        logger.info(f"Tweet ID: {tweet_data.id}")
-        logger.info(f"Text: {tweet_data.text}")
-        logger.info(f"Author ID: {tweet_data.author_id}")
-        logger.info(f"Conversation ID: {tweet_data.conversation_id}")
-        # In a real bot, you might call post_reply here
-        # For example:
-        # if api_v1 and api_v2: # Ensure clients are available
-        # post_reply(tweet_data.id, "Thanks for the mention!", media_id=None)
-        # else:
-        # logger.error("API clients not available for replying.")
+    if not user_id and not username:
+        logger.error("get_user_profile: Must provide either user_id or username.")
+        return None
 
-    # Initialize clients
-    init_client() # This will set global api_v1 and api_v2
-
-    # Test listening for mentions (this will run indefinitely)
-    if api_v1 and api_v2 and TWITTER_BEARER_TOKEN and TWITTER_BOT_USERNAME:
-         logger.info(f"Attempting to listen for mentions to @{TWITTER_BOT_USERNAME}. Ensure this user exists and tokens are correct.")
-         listen_for_mentions(handle_mention)
-    else:
-         logger.error("Could not start mention listener. Check credentials and .env settings (TWITTER_BOT_USERNAME, TWITTER_BEARER_TOKEN).")
+    try:
+        if user_id:
+            logger.info(f"Fetching user profile for user_id: {user_id}")
+            response = api_v2.get_user(id=user_id, user_fields=["created_at", "description", "location", "public_metrics", "verified"])
+        else: # username must be provided
+            logger.info(f"Fetching user profile for username: @{username}")
+            response = api_v2.get_user(username=username, user_fields=["created_at", "description", "location", "public_metrics", "verified"])
+        
+        if response.data:
+            logger.info(f"Successfully fetched profile for: {response.data.username} (ID: {response.data.id})")
+            return response.data
+        else:
+            logger.warning(f"Could not find user or no data returned. User ID: {user_id}, Username: {username}. Errors: {response.errors}")
+            return None
+    except tweepy.TweepyException as e:
+        logger.error(f"Tweepy API error fetching user profile (ID: {user_id}, User: {username}): {e}", exc_info=True)
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error fetching user profile (ID: {user_id}, User: {username}): {e}", exc_info=True)
+        return None

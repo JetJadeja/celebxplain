@@ -1,11 +1,24 @@
 import logging
 import threading
 import os
+import sys
+
+# Adjust sys.path to allow running main.py directly from its subdirectory
+# while still enabling relative imports for modules within the 'twitter_bot' package.
+# This adds the parent directory of 'twitter_bot' (i.e., 'server') to sys.path.
+_main_dir = os.path.dirname(os.path.abspath(__file__))
+_package_root = os.path.dirname(_main_dir) # This should be 'server/'
+if _package_root not in sys.path:
+    sys.path.insert(0, _package_root)
+
+# Now relative imports should work, assuming 'twitter_bot' is the package name.
+# We expect to be in 'server/twitter_bot/main.py', so the imports become
+# from twitter_bot import twitter_client, bot_logic
 
 # Assuming main.py is in server/twitter_bot/
 # Ensure other bot modules are in the same directory or accessible via Python path
-from . import twitter_client
-from . import bot_logic
+from twitter_bot import twitter_client
+from twitter_bot import bot_logic
 
 # Configure basic logging for the main entry point
 log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
