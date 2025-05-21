@@ -2,6 +2,7 @@ import logging
 import threading
 import os
 import sys
+from dotenv import load_dotenv
 
 # Adjust sys.path to allow running main.py directly from its subdirectory
 # while still enabling relative imports for modules within the 'twitter_bot' package.
@@ -21,8 +22,11 @@ from twitter_bot import twitter_client
 from twitter_bot import bot_logic
 
 # Configure basic logging for the main entry point
+load_dotenv()
 log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_format)
+level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
+level = logging.getLevelName(level_str)
+logging.basicConfig(level=level, format=log_format)
 logger = logging.getLogger(__name__) # Use __name__ for the logger of this specific file
 
 # Set higher level logging for noisy libraries if needed, e.g.:

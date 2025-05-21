@@ -3,15 +3,20 @@ import os
 import datetime
 import logging
 import contextlib
+from dotenv import load_dotenv
 
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 # Configure logger for this module
 logger = logging.getLogger(__name__)
 # Basic configuration if no handlers are set for the root logger (common in scripts)
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
+level = logging.getLevelName(level_str)
+logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Database path
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'database.db')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), APP_DATA_BASE_DIR, 'database.db')
 
 @contextlib.contextmanager
 def get_db_connection():

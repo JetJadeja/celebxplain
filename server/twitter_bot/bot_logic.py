@@ -4,6 +4,7 @@ import os
 import json
 import time
 import threading # For running poll_job_statuses in a separate thread
+from dotenv import load_dotenv
 
 # Imports assuming 'server/' is in sys.path, as configured by main.py
 from twitter_bot import twitter_client
@@ -17,15 +18,19 @@ from utils.db import (
 )
 from celery_app import celery_app as celery_app_direct
 
+load_dotenv()
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
+level = logging.getLevelName(level_str)
+logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- Configuration & Data Placeholders ---
-MAX_REPLY_ATTEMPTS_PER_SESSION = 2 # Max times poll_job_statuses will try to call post_reply for a job
+MAX_REPLY_ATTEMPTS_PER_SESSION = int(os.getenv("MAX_REPLY_ATTEMPTS_PER_SESSION", 2))
 
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 # Load personas data once when the module is loaded
-PERSONAS_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "personas.json")
+PERSONAS_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", APP_DATA_BASE_DIR, "personas.json")
 loaded_personas_data = {}
 persona_name_map = {} # For quick lookup of name by id
 

@@ -3,13 +3,14 @@ import dotenv
 import os
 import json
 import pathlib
+from dotenv import load_dotenv
 
 # Generate an explanation of the topic in the style of the celebrity
 def generate_explanation(persona_id, query):
     """Generate an explanation of the topic in the style of the celebrity"""
 
     # Load environment variables
-    dotenv.load_dotenv()
+    load_dotenv()
 
     # Set OpenAI API key
     api_key = os.getenv("OPENAI_API_KEY")
@@ -17,7 +18,8 @@ def generate_explanation(persona_id, query):
 
     # Load personas data
     current_dir = pathlib.Path(__file__).parent.parent
-    personas_path = os.path.join(current_dir, "data", "personas.json")
+    APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
+    personas_path = os.path.join(current_dir, APP_DATA_BASE_DIR, "personas.json")
 
     # Load personas data
     with open(personas_path, "r") as f:

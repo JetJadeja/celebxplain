@@ -1,6 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file, current_app
 from services.job_service import create_job, get_job_info
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 
 jobs_bp = Blueprint('jobs', __name__)
 
@@ -40,7 +45,7 @@ def get_job_status_route(job_id):
     # Check if final video exists
     # Assuming 'final_video.mp4' is the standard name.
     # Adjust if your naming convention is different or stored in job_data
-    final_video_path = os.path.join(current_app.root_path, 'data', 'results', job_id, 'final_video.mp4')
+    final_video_path = os.path.join(current_app.root_path, APP_DATA_BASE_DIR, 'results', job_id, 'final_video.mp4')
 
     if os.path.exists(final_video_path) and job_data['job_details']['status'] == 'completed':
         video_available = True
@@ -70,7 +75,7 @@ def get_video_route(job_id):
         return jsonify({'error': 'Video not ready yet'}), 400
     
     # Path to final video file
-    video_path = os.path.join(current_app.root_path, 'data', 'results', job_id, 'final_video.mp4')
+    video_path = os.path.join(current_app.root_path, APP_DATA_BASE_DIR, 'results', job_id, 'final_video.mp4')
     
     if not os.path.exists(video_path):
         return jsonify({'error': 'Video file not found'}), 404

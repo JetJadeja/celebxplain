@@ -5,10 +5,7 @@ from pydantic import BaseModel
 import dotenv
 import logging
 from typing import Optional, Tuple
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from dotenv import load_dotenv
 
 # Load environment variables (e.g., OPENAI_API_KEY)
 dotenv.load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -20,6 +17,16 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize OpenAI client: {e}. Make sure OPENAI_API_KEY is set.")
     client = None
+
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
+
+# Configure logging
+level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
+level = logging.getLevelName(level_str)
+logging.basicConfig(level=level)
+logger = logging.getLogger(__name__)
 
 class TweetExtract(BaseModel):
     """
@@ -115,7 +122,7 @@ if __name__ == '__main__':
     
     # Load actual personas_data for testing
     current_dir = os.path.dirname(__file__)
-    personas_path = os.path.join(current_dir, "..", "data", "personas.json")
+    personas_path = os.path.join(current_dir, "..", APP_DATA_BASE_DIR, "personas.json")
     actual_personas_data = {"personas": []} # Default to empty if loading fails
 
     if os.path.exists(personas_path):

@@ -7,15 +7,20 @@ import math # For ceiling in video upload
 from typing import Optional, Tuple, Callable # Added Optional and Tuple for type hints
 
 # Configure logging for the module
-log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_format)
+load_dotenv()
+log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+level_str = os.environ.get('LOG_LEVEL', 'INFO').upper()
+level = logging.getLevelName(level_str)
+logging.basicConfig(level=level, format=log_format)
 logger = logging.getLogger(__name__)
 
 # --- Configuration Loading ---
 # Load environment variables from .env file, assuming .env is in the parent (server/) directory.
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 # Define the path for storing the since_id
-SINCE_ID_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'since_id.txt')
+SINCE_ID_FILE = os.path.join(os.path.dirname(__file__), '..', APP_DATA_BASE_DIR, 'since_id.txt')
 
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
@@ -39,7 +44,7 @@ TWITTER_BOT_USERNAME = os.getenv("TWITTER_BOT_USERNAME") # Bot's own @handle
 # Twitter API v2 rate limit for GET /2/users/:id/mentions is generous (e.g., 180 reqs / 15 min for user auth).
 # Setting this to be configurable via environment variable.
 DEFAULT_MENTIONS_POLLING_INTERVAL = 30
-MENTIONS_POLLING_INTERVAL = int(os.getenv("MENTIONS_POLLING_INTERVAL", DEFAULT_MENTIONS_POLLING_INTERVAL))
+MENTIONS_POLLING_INTERVAL = int(os.getenv("MENTIONS_POLLING_INTERVAL_SECONDS", DEFAULT_MENTIONS_POLLING_INTERVAL))
 
 # Global API client objects, initialized by init_client()
 # These are intended to be singletons for the application's lifecycle.
@@ -347,8 +352,8 @@ def listen_for_mentions(callback_on_mention: Callable):
         time.sleep(MENTIONS_POLLING_INTERVAL)
 
 # Define retry parameters for posting replies
-MAX_POST_RETRIES = 3
-POST_RETRY_DELAY_SECONDS = 5 # More descriptive name
+MAX_POST_RETRIES = int(os.getenv("TWITTER_POST_MAX_RETRIES", 3))
+POST_RETRY_DELAY_SECONDS = int(os.getenv("TWITTER_POST_RETRY_DELAY_SECONDS", 5))
 # Define specific HTTP status codes that should not be retried (e.g., auth issues, bad requests)
 NON_RETRYABLE_STATUS_CODES = [400, 401, 403, 404] # Bad Request, Unauthorized, Forbidden, Not Found
 
@@ -432,7 +437,7 @@ def post_reply(tweet_id: str, text: str, media_id: Optional[str] = None) -> Opti
     return None
 
 
-def upload_video(video_filepath: str, max_retries_status_check=24, status_check_interval=5) -> Optional[str]:
+def upload_video(video_filepath: str, max_retries_status_check=int(os.getenv("TWITTER_UPLOAD_MAX_RETRIES_STATUS_CHECK", 24)), status_check_interval=int(os.getenv("TWITTER_UPLOAD_STATUS_CHECK_INTERVAL_SECONDS", 5))) -> Optional[str]:
     """
     Uploads a video to Twitter using the v1.1 chunked media upload API.
     This is necessary as API v2 does not yet fully support large video uploads in the same manner.

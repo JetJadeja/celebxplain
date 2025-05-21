@@ -4,6 +4,7 @@ Celery tasks for handling job processing
 import os
 import concurrent.futures
 from celery import shared_task
+from dotenv import load_dotenv
 
 from utils.db import update_job_status
 from services.llm_service import generate_explanation
@@ -11,6 +12,10 @@ from services.tts_service import generate_speech
 from services.sieve_service import create_celebrity_video
 from services.video_service import assemble_final_video
 from services.visuals_service import create_explanatory_visuals, create_fake_explanatory_visuals
+
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 
 @shared_task
 def process_job(job_id, persona_id, query):
@@ -24,7 +29,7 @@ def process_job(job_id, persona_id, query):
     """
     try:
         # Define the job output directory
-        results_dir = os.path.join('data', 'results', job_id)
+        results_dir = os.path.join(APP_DATA_BASE_DIR, 'results', job_id)
         os.makedirs(results_dir, exist_ok=True)
 
         # Step 1: Generate explanation content
@@ -57,7 +62,7 @@ def process_job(job_id, persona_id, query):
 
         # Steps 3 & 4: Parallel processing for efficiency
         update_job_status(job_id, "processing", "Generating visuals content")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=int(os.getenv("JOB_MAX_WORKERS_THREAD_POOL", 2))) as executor:
             # Launch both tasks simultaneously
             # celeb_task = executor.submit(
             #     create_celebrity_video,

@@ -2,12 +2,17 @@ import os
 import json
 import shutil
 import sieve
+from dotenv import load_dotenv
+
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 
 def create_celebrity_video(persona_id, audio_file, output_dir):
     """Create a video of the celebrity lip-syncing to the audio"""
     try:
         # Get the persona data
-        with open(os.path.join('data', 'personas.json'), 'r') as f:
+        with open(os.path.join(APP_DATA_BASE_DIR, 'personas.json'), 'r') as f:
             personas = json.load(f)
         persona = next((p for p in personas["personas"] if p["id"] == persona_id), None)
         
@@ -15,7 +20,7 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
         base_video_path = persona["video_path"]
         if not base_video_path or not os.path.exists(base_video_path):
             print(f"Warning: Base video not found for persona {persona_id}, using placeholder")
-            return os.path.join('data', 'placeholder_celebrity.mp4')
+            return os.path.join(APP_DATA_BASE_DIR, 'placeholder_celebrity.mp4')
         
         # Define the desired output video path
         output_video = os.path.join(output_dir, "lip_synced_video.mp4")
@@ -65,7 +70,7 @@ def create_celebrity_video(persona_id, audio_file, output_dir):
     except Exception as e:
         print(f"Error creating celebrity video: {e}")
         # Return a placeholder in case of error
-        return os.path.join('data', 'placeholder_celebrity.mp4')
+        return os.path.join(APP_DATA_BASE_DIR, 'placeholder_celebrity.mp4')
 
 def transcribe_audio_file(audio_file_path):
     """Helper function to transcribe audio using Sieve API"""

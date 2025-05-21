@@ -8,6 +8,8 @@ from .sieve_service import transcribe_audio_file
 # Load environment variables
 load_dotenv()
 
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
+
 # Get credentials
 user_id = os.getenv("PLAYHT_TTS_USER")
 api_key = os.getenv("PLAYHT_TTS_API_KEY")
@@ -23,7 +25,7 @@ def generate_speech(job_id, persona_id, script, results_dir):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     
     # Get the persona data
-    with open(os.path.join('data', 'personas.json'), 'r') as f:
+    with open(os.path.join(APP_DATA_BASE_DIR, 'personas.json'), 'r') as f:
         personas = json.load(f)
     
     persona = next((p for p in personas["personas"] if p["id"] == persona_id), None)

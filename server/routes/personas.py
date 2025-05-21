@@ -1,6 +1,11 @@
 from flask import Blueprint, jsonify, request
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+APP_DATA_BASE_DIR = os.environ.get('APP_DATA_BASE_DIR', 'data')
 
 personas_bp = Blueprint('personas', __name__)
 
@@ -8,7 +13,7 @@ personas_bp = Blueprint('personas', __name__)
 def get_personas():
     # Define the path to the personas.json file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    personas_file = os.path.join(current_dir, '..', 'data', 'personas.json')
+    personas_file = os.path.join(current_dir, '..', APP_DATA_BASE_DIR, 'personas.json')
     
     # Read personas from the JSON file
     with open(personas_file, 'r') as f:
