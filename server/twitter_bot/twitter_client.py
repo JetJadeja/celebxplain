@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 # --- Configuration Loading ---
 # Load environment variables from .env file, assuming .env is in the parent (server/) directory.
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+# Define the path for storing the since_id
+SINCE_ID_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'since_id.txt')
+
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
     logger.info(f"Loaded .env file from: {dotenv_path}")
@@ -138,6 +141,40 @@ def init_client() -> Tuple[Optional[tweepy.API], Optional[tweepy.Client]]:
 
 # --- Core Twitter Interactions ---
 
+def _read_since_id() -> Optional[int]:
+    """Reads the since_id from the SINCE_ID_FILE."""
+    if not os.path.exists(SINCE_ID_FILE):
+        logger.info(f"Since ID file not found at {SINCE_ID_FILE}. Will fetch latest mention as baseline.")
+        return None
+    try:
+        with open(SINCE_ID_FILE, 'r') as f:
+            content = f.read().strip()
+            if content:
+                logger.info(f"Successfully read since_id {content} from {SINCE_ID_FILE}")
+                return int(content)
+            else:
+                logger.warning(f"Since ID file {SINCE_ID_FILE} is empty.")
+                return None
+    except ValueError:
+        logger.error(f"Invalid content in since_id file {SINCE_ID_FILE}. Could not parse to int.")
+        return None
+    except IOError as e:
+        logger.error(f"IOError reading since_id file {SINCE_ID_FILE}: {e}")
+        return None
+
+def _write_since_id(since_id: int) -> None:
+    """Writes the since_id to the SINCE_ID_FILE."""
+    try:
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(SINCE_ID_FILE), exist_ok=True)
+        with open(SINCE_ID_FILE, 'w') as f:
+            f.write(str(since_id))
+        logger.info(f"Successfully wrote since_id {since_id} to {SINCE_ID_FILE}")
+    except IOError as e:
+        logger.error(f"IOError writing since_id to file {SINCE_ID_FILE}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error writing since_id {since_id} to {SINCE_ID_FILE}: {e}", exc_info=True)
+
 def listen_for_mentions(callback_on_mention: Callable):
     """
     Periodically polls for new mentions to the bot's authenticated user using Twitter API v2.
@@ -185,29 +222,33 @@ def listen_for_mentions(callback_on_mention: Callable):
         logger.critical(f"Unexpected error getting bot user ID: {e}", exc_info=True)
         raise RuntimeError(f"Unexpected error getting bot user ID: {e}")
 
-    # Initialize since_id: Fetch the most recent mention to the bot initially.
-    # This sets a baseline to avoid processing a large backlog of old mentions on first start.
-    last_processed_mention_id = None
-    try:
-        logger.info(f"Fetching initial latest mention ID for @{bot_username_from_api} to set processing baseline...")
-        initial_mentions_response = api_v2.get_users_mentions(
-            id=bot_user_id,
-            max_results=5, # Only need the very latest one, if any
-            tweet_fields=["author_id", "created_at", "conversation_id", "in_reply_to_user_id", "referenced_tweets"]
-        )
-        if initial_mentions_response.data and len(initial_mentions_response.data) > 0:
-            last_processed_mention_id = initial_mentions_response.data[0].id # Newest one is first
-            logger.info(f"Initial baseline mention ID set to: {last_processed_mention_id}")
-        elif initial_mentions_response.errors:
-            for error in initial_mentions_response.errors:
-                 logger.error(f"API error during initial mention fetch: {error.get('title', '')} - {error.get('detail', '')}")
-            logger.warning("Could not establish baseline due to API errors. Will fetch all new mentions on first poll.")
-        else:
-            logger.info(f"No recent mentions found for @{bot_username_from_api}. Will process mentions from this point forward.")
-    except tweepy.TweepyException as e:
-        logger.error(f"Tweepy error fetching initial mentions: {e}. Will proceed without an initial since_id.", exc_info=True)
-    except Exception as e:
-        logger.error(f"Unexpected error fetching initial mentions: {e}. Will proceed without an initial since_id.", exc_info=True)
+    # Initialize since_id: Try to read from file first.
+    last_processed_mention_id = _read_since_id()
+
+    if last_processed_mention_id is None:
+        logger.info(f"No valid since_id found in {SINCE_ID_FILE} or file doesn't exist. Fetching initial latest mention ID for @{bot_username_from_api} to set processing baseline...")
+        try:
+            initial_mentions_response = api_v2.get_users_mentions(
+                id=bot_user_id,
+                max_results=5, # Only need the very latest one, if any
+                tweet_fields=["author_id", "created_at", "conversation_id", "in_reply_to_user_id", "referenced_tweets"]
+            )
+            if initial_mentions_response.data and len(initial_mentions_response.data) > 0:
+                last_processed_mention_id = initial_mentions_response.data[0].id # Newest one is first
+                logger.info(f"Initial baseline mention ID set to: {last_processed_mention_id} from Twitter API.")
+                _write_since_id(last_processed_mention_id) # Write this new baseline ID
+            elif initial_mentions_response.errors:
+                for error in initial_mentions_response.errors:
+                     logger.error(f"API error during initial mention fetch: {error.get('title', '')} - {error.get('detail', '')}")
+                logger.warning("Could not establish baseline due to API errors. Will fetch all new mentions on first poll if no since_id is loaded.") # Clarified log
+            else:
+                logger.info(f"No recent mentions found for @{bot_username_from_api}. Will process mentions from this point forward if no since_id is loaded.") # Clarified log
+        except tweepy.TweepyException as e:
+            logger.error(f"Tweepy error fetching initial mentions: {e}. Will proceed without an initial since_id if none was loaded from file.", exc_info=True)
+        except Exception as e:
+            logger.error(f"Unexpected error fetching initial mentions: {e}. Will proceed without an initial since_id if none was loaded from file.", exc_info=True)
+    else: # A since_id was successfully loaded from the file
+        logger.info(f"Successfully loaded last_processed_mention_id {last_processed_mention_id} from {SINCE_ID_FILE}.")
 
     logger.info(f"Starting to poll for mentions to @{bot_username_from_api} (ID: {bot_user_id}) every {MENTIONS_POLLING_INTERVAL} seconds...")
     
@@ -248,28 +289,49 @@ def listen_for_mentions(callback_on_mention: Callable):
                     # However, checking tweet.author_id against bot_user_id can prevent processing self-replies if they slip through.
                     if str(tweet.author_id) == str(bot_user_id):
                         logger.info(f"Skipping mention from bot itself (Tweet ID: {tweet.id}, Author ID: {tweet.author_id}, Bot ID: {bot_user_id})")
-                        last_processed_mention_id = tweet.id # Still update since_id to not re-fetch it
-                        continue
+                        # Update last_processed_mention_id even for skipped self-mentions to advance past them
+                        if tweet.id > (last_processed_mention_id or 0): # Ensure it's greater
+                             last_processed_mention_id = tweet.id
+                        continue # Skip processing this tweet further
 
-                    logger.info(f"Received new valid mention: Tweet ID {tweet.id} by Author ID {tweet.author_id}. Text: '{tweet.text}'")
-                    logger.info(f"Calling handle_mention callback for Tweet ID {tweet.id}...")
-                    try:
-                        callback_on_mention(tweet) # Pass the full Tweet object
-                        logger.info(f"Successfully processed callback for Tweet ID {tweet.id}.")
-                    except Exception as cb_exc:
-                        logger.error(f"Error in mention callback for tweet {tweet.id}: {cb_exc}", exc_info=True)
+                    logger.info(f"Processing mention: Tweet ID {tweet.id}, Author ID {tweet.author_id}, Text: \"{tweet.text}\"") # Corrected logging parenthesis
                     
-                    last_processed_mention_id = tweet.id # Crucial: update to the ID of the latest processed mention
-                    new_mentions_processed_this_cycle += 1
-            
-            total_mentions_in_response = len(mentions_response.data) if mentions_response.data else 0
-            
-            if new_mentions_processed_this_cycle > 0:
-                logger.info(f"Successfully processed {new_mentions_processed_this_cycle} new mention(s) out of {total_mentions_in_response} received. Last processed ID now: {last_processed_mention_id}")
-            elif total_mentions_in_response > 0 : # Mentions were received but none were processed
-                logger.info(f"Received {total_mentions_in_response} mention(s), but none were processed (e.g., skipped as self-mentions). Last seen tweet ID is now: {last_processed_mention_id}")
-            else: # No mentions in the response
-                logger.info(f"No new mentions found in API response for user ID {bot_user_id} (since_id: {last_processed_mention_id}).")
+                    try:
+                        # Invoke the callback function passed to listen_for_mentions
+                        # This function (e.g., bot_logic.handle_mention) is responsible for the core logic
+                        callback_on_mention(tweet)
+                        
+                        # If callback was successful, update last_processed_mention_id
+                        # We use the ID of the current tweet as it's the latest one processed in this iteration.
+                        if tweet.id > (last_processed_mention_id or 0): # Ensure it's greater, handles initial None
+                            last_processed_mention_id = tweet.id
+                        
+                        new_mentions_processed_this_cycle += 1
+                    except Exception as e:
+                        # Log error from callback processing, but continue loop to process other mentions
+                        # and to ensure the polling doesn't die from one bad tweet.
+                        logger.error(f"Error processing mention (Tweet ID: {tweet.id}) with callback: {e}", exc_info=True)
+                        # Decide if last_processed_mention_id should be updated even on callback error.
+                        # Generally, yes, to avoid reprocessing a problematic tweet indefinitely.
+                        if tweet.id > (last_processed_mention_id or 0):
+                             last_processed_mention_id = tweet.id
+
+                if new_mentions_processed_this_cycle > 0:
+                    logger.info(f"Successfully processed {new_mentions_processed_this_cycle} new mention(s) in this cycle.")
+                    if last_processed_mention_id: # Make sure we have a valid ID to write
+                        _write_since_id(last_processed_mention_id)
+                else:
+                    if mentions_response.data : # Found mentions but all were skipped (e.g. self-mentions)
+                        logger.info("No new, actionable mentions processed this cycle (e.g., all were self-mentions or skipped).")
+                        if last_processed_mention_id: # Still, if last_processed_mention_id was updated (e.g. by skipping self-mentions), write it
+                            _write_since_id(last_processed_mention_id)
+                    else: # No mentions data at all
+                         logger.info("No new mentions found in this polling cycle.")
+                         # No need to write since_id if it hasn't changed and no mentions were fetched.
+                         # However, if it was initialized to None and then set from API, it would have been written already.
+
+            else: # No mentions_response.data
+                logger.info("No new mentions found in this polling cycle.")
 
         except tweepy.TweepyException as e:
             logger.error(f"Tweepy API error during mention polling loop: {e}", exc_info=True)
@@ -283,6 +345,12 @@ def listen_for_mentions(callback_on_mention: Callable):
         # logger.debug(f"Mention polling cycle complete. Sleeping for {MENTIONS_POLLING_INTERVAL} seconds.")
         logger.info(f"Mention polling cycle for @{bot_username_from_api} COMPLETE. Sleeping for {MENTIONS_POLLING_INTERVAL} seconds.")
         time.sleep(MENTIONS_POLLING_INTERVAL)
+
+# Define retry parameters for posting replies
+MAX_POST_RETRIES = 3
+POST_RETRY_DELAY_SECONDS = 5 # More descriptive name
+# Define specific HTTP status codes that should not be retried (e.g., auth issues, bad requests)
+NON_RETRYABLE_STATUS_CODES = [400, 401, 403, 404] # Bad Request, Unauthorized, Forbidden, Not Found
 
 def post_reply(tweet_id: str, text: str, media_id: Optional[str] = None) -> Optional[tweepy.Response]:
     """
@@ -301,29 +369,67 @@ def post_reply(tweet_id: str, text: str, media_id: Optional[str] = None) -> Opti
         logger.error("post_reply: Twitter API v2 client not initialized. Cannot post reply.")
         return None
 
-    try:
-        logger.info(f"Attempting to post reply to tweet_id: {tweet_id}. Text: '{text[:100]}...', Media ID: {media_id}")
-        reply_params = {"in_reply_to_tweet_id": tweet_id, "text": text}
-        if media_id:
-            reply_params["media_ids"] = [media_id]
-        
-        response = api_v2.create_tweet(**reply_params)
-        
-        if response.data and response.data.get("id"):
-            logger.info(f"Successfully posted reply. New Tweet ID: {response.data['id']} in reply to {tweet_id}")
-            return response
-        else:
-            logger.error(f"Failed to post reply to tweet {tweet_id}. No data/ID in response: {response.errors or response}")
-            return None
-    except tweepy.TweepyException as e:
-        logger.error(f"Tweepy API error posting reply to tweet {tweet_id}: {e}", exc_info=True)
-        # Log specific error details if available
-        if hasattr(e, 'api_codes') and hasattr(e, 'api_messages'):
-            logger.error(f"API Error Codes: {e.api_codes}, Messages: {e.api_messages}")
-        return None
-    except Exception as e:
-        logger.error(f"Unexpected error posting reply to tweet {tweet_id}: {e}", exc_info=True)
-        return None
+    reply_params = {"in_reply_to_tweet_id": tweet_id, "text": text}
+    if media_id:
+        reply_params["media_ids"] = [media_id]
+
+    for attempt in range(MAX_POST_RETRIES):
+        try:
+            logger.info(f"Attempt {attempt + 1}/{MAX_POST_RETRIES} to post reply to tweet_id: {tweet_id}. Text: '{text[:100]}...', Media ID: {media_id}")
+            response = api_v2.create_tweet(**reply_params)
+            
+            if response.data and response.data.get("id"):
+                logger.info(f"Successfully posted reply. New Tweet ID: {response.data['id']} in reply to {tweet_id} on attempt {attempt + 1}.")
+                return response
+            else:
+                # This case might indicate a non-exception failure from Twitter, or unexpected response structure
+                logger.error(f"Failed to post reply to tweet {tweet_id} on attempt {attempt + 1}. Response data missing ID. Errors: {response.errors or response}")
+                # Check if there are specific errors in response.errors that might be non-retryable
+                if response.errors:
+                    for error in response.errors:
+                        # Example: Twitter API v2 often returns errors with a 'status' field in the error object for some endpoints
+                        # For create_tweet, error details might be in 'title' or by inspecting the structure.
+                        # This is a heuristic. The actual error structure for create_tweet might need specific handling.
+                        # For now, if there are errors, we treat it as a potentially retryable failure unless caught by TweepyException status codes.
+                        logger.warning(f"Error detail from Twitter: {error}") 
+                # Consider this a failure for this attempt, will retry if attempts remain.
+                # If we want to break early for certain response.errors, add logic here.
+
+        except tweepy.TweepyException as e:
+            logger.warning(f"Tweepy API error on attempt {attempt + 1}/{MAX_POST_RETRIES} posting reply to tweet {tweet_id}: {e}")
+            
+            # Check for non-retryable status codes from the exception's response object
+            status_code = getattr(e.response, 'status_code', None)
+            if status_code in NON_RETRYABLE_STATUS_CODES:
+                logger.error(f"Non-retryable error (HTTP {status_code}) for tweet {tweet_id}. Aborting retries. Error: {e}")
+                if hasattr(e, 'api_codes') and hasattr(e, 'api_messages'): # Log more details if available
+                     logger.error(f"API Error Codes: {e.api_codes}, Messages: {e.api_messages}")
+                return None # Do not retry for these errors
+
+            # Log specific error details if available from the exception itself
+            if hasattr(e, 'api_codes') and hasattr(e, 'api_messages'):
+                logger.error(f"API Error Codes: {e.api_codes}, Messages: {e.api_messages}")
+            else:
+                logger.error(f"Full error details: {e}") # Fallback to generic error string
+
+            if attempt < MAX_POST_RETRIES - 1:
+                logger.info(f"Waiting {POST_RETRY_DELAY_SECONDS} seconds before next retry...")
+                time.sleep(POST_RETRY_DELAY_SECONDS)
+            else:
+                logger.error(f"All {MAX_POST_RETRIES} attempts failed for tweet {tweet_id}.")
+                return None # All retries exhausted
+                
+        except Exception as e:
+            logger.error(f"Unexpected error on attempt {attempt + 1}/{MAX_POST_RETRIES} posting reply to tweet {tweet_id}: {e}", exc_info=True)
+            if attempt < MAX_POST_RETRIES - 1:
+                logger.info(f"Waiting {POST_RETRY_DELAY_SECONDS} seconds before next retry due to unexpected error...")
+                time.sleep(POST_RETRY_DELAY_SECONDS)
+            else:
+                logger.error(f"All {MAX_POST_RETRIES} attempts failed due to unexpected errors for tweet {tweet_id}.")
+                return None # All retries exhausted
+
+    logger.error(f"Failed to post reply to tweet {tweet_id} after {MAX_POST_RETRIES} attempts.") # Should be reached if loop finishes without returning
+    return None
 
 
 def upload_video(video_filepath: str, max_retries_status_check=24, status_check_interval=5) -> Optional[str]:

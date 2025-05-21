@@ -8,7 +8,13 @@ import threading # For running poll_job_statuses in a separate thread
 # Imports assuming 'server/' is in sys.path, as configured by main.py
 from twitter_bot import twitter_client
 from twitter_bot import request_parser
-from utils.db import create_job as db_create_job_direct, get_job as db_get_job_direct, update_job_status as db_update_job_status_direct
+from utils.db import (
+    create_job as db_create_job_direct, 
+    get_job as db_get_job_direct, 
+    update_job_status as db_update_job_status_direct,
+    # get_db_connection, # No longer directly used here
+    get_pending_twitter_replies # Import the new helper function
+)
 from celery_app import celery_app as celery_app_direct
 
 # Configure logging
@@ -16,6 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # --- Configuration & Data Placeholders ---
+MAX_REPLY_ATTEMPTS_PER_SESSION = 2 # Max times poll_job_statuses will try to call post_reply for a job
 
 # Load personas data once when the module is loaded
 PERSONAS_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "personas.json")
@@ -112,8 +119,14 @@ def handle_mention(tweet):
     try:
         # Assuming db_create_job_direct is available and imported
         # create_job in db.py automatically sets initial status to 'created'
-        db_create_job_direct(job_id=job_id, persona_id=persona_id, query=topic)
-        logger.info(f"Successfully created job {job_id} in main database for topic '{topic}' by {persona_name}. Initial status: 'created'.")
+        db_create_job_direct(
+            job_id=job_id, 
+            persona_id=persona_id, 
+            query=topic,
+            original_tweet_id=str(tweet.id),  # Pass the original tweet ID
+            original_tweet_author_id=str(tweet.author_id)  # Pass the original tweet author ID
+        )
+        logger.info(f"Successfully created job {job_id} in main database for topic '{topic}' by {persona_name} (TweetID: {tweet.id}). Initial status: 'created'.")
     except Exception as e:
         logger.error(f"Failed to create job {job_id} in database: {e}")
         return
@@ -136,7 +149,7 @@ def handle_mention(tweet):
     # 8. Store job tracking info locally (thread-safe)
     with jobs_cache_lock:
         active_jobs_cache[job_id] = {
-            "original_tweet_id": tweet.id,
+            "original_tweet_id": str(tweet.id), # Ensure it's a string, matching DB practice
             "topic": topic,
             "persona_name": persona_name,
             "persona_id": persona_id, # Store persona_id as well
@@ -165,97 +178,135 @@ def poll_job_statuses():
     This function is intended to be run in a separate thread or as a periodic task.
     """
     logger.info("Starting poll_job_statuses thread/task...")
+
+    def get_persona_name_from_id_local(persona_id_local):
+        # Accesses the global persona_name_map
+        return persona_name_map.get(persona_id_local, "the selected celebrity")
+
     while True: # Loop indefinitely, or until a shutdown signal
-        # Create a snapshot of job IDs to iterate over to avoid issues if cache is modified during iteration by another thread.
-        current_job_ids = []
-        with jobs_cache_lock:
-            current_job_ids = list(active_jobs_cache.keys())
-        
-        if not current_job_ids:
-            # logger.info("No active jobs to poll. Sleeping...")
-            pass # Will sleep at the end of the loop
-        else:
-            logger.info(f"Polling statuses for {len(current_job_ids)} active job(s): {current_job_ids}")
+        jobs_to_process_this_cycle = {} # job_id -> {details for reply}
 
-        for job_id in current_job_ids:
-            job_tracking_info = get_job_tracking_info(job_id)
-            if not job_tracking_info: # Job might have been removed by another thread/process already
-                logger.warning(f"Job {job_id} was in current_job_ids but not found in cache. Skipping.")
-                continue
-
-            original_tweet_id = job_tracking_info["original_tweet_id"]
-            topic = job_tracking_info["topic"]
-            persona_name = job_tracking_info["persona_name"]
-
-            try:
-                # 1. Fetch job details from the main database
-                # Assuming db_get_job_direct is available
-                job_details = db_get_job_direct(job_id)
-
-                if not job_details:
-                    logger.warning(f"Job {job_id} not found in the main database. Might be an issue or already processed/cleaned up.")
-                    # Decide if to remove from local cache or wait longer
-                    # For now, let's assume it might appear later or was cleaned up externally.
-                    # Consider adding a timestamp to active_jobs_cache entries and removing very old ones.
-                    continue
-                
-                job_status = job_details.get('status')
-                logger.info(f"Job {job_id} status from DB: {job_status}")
-
-                # 2. Handle 'completed' status
-                if job_status == 'completed':
-                    logger.info(f"Job {job_id} completed. Preparing to post video for topic '{topic}' by {persona_name} to tweet {original_tweet_id}.")
-                    video_filename = job_details.get("video_filename", "final_video.mp4") # Get actual filename if stored
-                    video_file_path = os.path.join(RESULTS_BASE_DIR, job_id, video_filename)
+        try:
+            # Part 1: Query DB for Twitter-originated jobs that are completed or errored
+            # Replace direct DB access with call to helper function
+            potential_jobs_for_reply_rows = get_pending_twitter_replies()
+            
+            with jobs_cache_lock: # Protect access to active_jobs_cache
+                for job_row_dict in potential_jobs_for_reply_rows: # It now returns a list of dicts
+                    job_id = job_row_dict['id'] 
                     
-                    media_id = None
-                    reply_text_success = f"Here's {persona_name} explaining '{topic}'!"
-                    public_video_url = f"{YOUR_PUBLIC_FLASK_URL}/api/jobs/{job_id}"
+                    # Check if we've already marked this job for reply attempt in this session
+                    if job_id in active_jobs_cache and active_jobs_cache[job_id].get("reply_attempted_this_session", False):
+                        # logger.debug(f"Job {job_id} already processed for reply in this session. Skipping.")
+                        continue # Skip if already handled in this session
 
-                    if os.path.exists(video_file_path):
-                        try:
-                            logger.info(f"Attempting to upload video: {video_file_path} for job {job_id}")
-                            media_id = twitter_client.upload_video(video_file_path)
-                            if media_id:
-                                logger.info(f"Successfully uploaded video for job {job_id}, media_id: {media_id}")
-                                twitter_client.post_reply(original_tweet_id, reply_text_success, media_id=media_id)
-                            else:
-                                logger.warning(f"Failed to upload video {video_file_path} for job {job_id} directly. Posting link instead.")
-                                twitter_client.post_reply(original_tweet_id, f"{reply_text_success} Watch it here: {public_video_url}")
-                        except Exception as e:
-                            logger.error(f"Error uploading video for job {job_id} or posting reply: {e}. Posting link instead.")
-                            twitter_client.post_reply(original_tweet_id, f"{reply_text_success} Watch it here: {public_video_url}")
-                    else:
-                        logger.error(f"Video file not found for job {job_id} at {video_file_path}. Posting link instead.")
-                        twitter_client.post_reply(original_tweet_id, f"{reply_text_success} (Video file was not found, but you can try the link): {public_video_url}")
+                    # This job is a candidate for replying.
+                    # Reconstruct details for the reply.
+                    jobs_to_process_this_cycle[job_id] = {
+                        "original_tweet_id": job_row_dict["original_tweet_id"],
+                        "topic": job_row_dict["query"], # DB 'query' column maps to 'topic'
+                        "persona_id": job_row_dict["persona_id"],
+                        "persona_name": get_persona_name_from_id_local(job_row_dict["persona_id"]),
+                        "db_status": job_row_dict["status"],
+                        "video_url": job_row_dict["result_url"], # This is jobs.result_url from DB (likely S3 URL)
+                        "db_error_message": job_row_dict["error"],
+                        "reply_attempted_this_session": False, # Initialize/reset flag
+                        "reply_attempts_in_session": 0 # Initialize reply_attempts_in_session
+                    }
                     
-                    remove_job_from_tracking(job_id)
+                    # Update active_jobs_cache: if job_id exists, update it; otherwise, add it.
+                    # This ensures cache reflects what we are about to process for reply.
+                    if job_id not in active_jobs_cache:
+                        active_jobs_cache[job_id] = {} # Initialize if new to cache
+                    
+                    active_jobs_cache[job_id].update(jobs_to_process_this_cycle[job_id])
+                    logger.info(f"Job {job_id} (Tweet: {job_row_dict['original_tweet_id']}) identified from DB for reply processing. Status: {job_row_dict['status']}.")
 
-                # 3. Handle 'error' status
-                elif job_status == 'error':
-                    error_msg_from_db = job_details.get('error_message', 'an unknown error occurred during processing')
-                    logger.error(f"Job {job_id} failed with error: {error_msg_from_db}. Notifying user of tweet {original_tweet_id}.")
-                    reply_text_error = f"Sorry, I couldn't generate the explanation for '{topic}' by {persona_name}. Error: {error_msg_from_db}"
-                    twitter_client.post_reply(original_tweet_id, reply_text_error)
-                    remove_job_from_tracking(job_id)
+            # Part 2: Process jobs identified for reply in this cycle
+            if not jobs_to_process_this_cycle:
+                # logger.info("No new Twitter jobs found in DB needing immediate reply this cycle.")
+                pass
+            else:
+                logger.info(f"Attempting to process replies for {len(jobs_to_process_this_cycle)} job(s): {list(jobs_to_process_this_cycle.keys())}")
+
+            for job_id, details in jobs_to_process_this_cycle.items():
+                original_tweet_id = details["original_tweet_id"]
+                topic = details["topic"]
+                persona_name = details["persona_name"]
+                db_status = details["db_status"]
+                video_url = details["video_url"]
+                db_error_message = details["db_error_message"]
+                reply_attempts_in_session = details.get("reply_attempts_in_session", 0)
                 
-                # Other statuses like 'pending', 'processing' are just logged, no action until they become 'completed' or 'error'
-                elif job_status in ['pending', 'processing']:
-                    logger.info(f"Job {job_id} is still {job_status}. Will check again later.")
-                else:
-                    logger.warning(f"Job {job_id} has an unexpected status: '{job_status}'. Reviewing.")
-                    # Potentially remove from cache if status is unrecoverable or unknown after a while
+                reply_action_taken = False # Flag to indicate if a reply attempt (success or fail) was made
+                reply_posted_successfully = False # Flag to indicate if Twitter API confirmed post
 
-            except Exception as e:
-                logger.error(f"Error processing job {job_id} in poll_job_statuses: {e}. Original tweet: {original_tweet_id}")
-                # Decide if to remove from cache or retry. For now, it will be retried on next poll.
-                # Consider a retry counter in active_jobs_cache.
+                try:
+                    if reply_attempts_in_session >= MAX_REPLY_ATTEMPTS_PER_SESSION:
+                        logger.warning(f"Job {job_id} (Tweet: {original_tweet_id}) has reached max reply attempts ({reply_attempts_in_session}/{MAX_REPLY_ATTEMPTS_PER_SESSION}) in this session. Skipping further reply attempts.")
+                        reply_action_taken = True # Mark as action taken to prevent loop, effectively stopping retries this session
+                        # Ensure it's marked as "attempted" in the main cache to stop for this session
+                        with jobs_cache_lock:
+                            if job_id in active_jobs_cache:
+                                active_jobs_cache[job_id]["reply_attempted_this_session"] = True
+                                active_jobs_cache[job_id]["reply_attempts_in_session"] = reply_attempts_in_session # Persist the count
+                        continue # Skip to next job
+
+                    if db_status == 'completed':
+                        logger.info(f"Job {job_id} 'completed'. Attempting reply for topic '{topic}' by {persona_name} to tweet {original_tweet_id} (Attempt {reply_attempts_in_session + 1}/{MAX_REPLY_ATTEMPTS_PER_SESSION}).")
+                        reply_text_success = f"Here's {persona_name} explaining '{topic}'!"
+
+                        if video_url:
+                            logger.info(f"Video for job {job_id} is at remote URL: {video_url}. Posting link.")
+                            response = twitter_client.post_reply(original_tweet_id, f"{reply_text_success} Watch it here: {video_url}")
+                        else:
+                            logger.error(f"Job {job_id} completed but no video_url (result_url) found in DB. Cannot post video link.")
+                            response = twitter_client.post_reply(original_tweet_id, f"Sorry, I finished processing '{topic}' by {persona_name}, but there was an issue retrieving the video link.")
+                        
+                        if response: # twitter_client.post_reply returns a response object on success
+                            reply_posted_successfully = True
+                        reply_action_taken = True
+
+                    elif db_status == 'error':
+                        error_message_to_post = db_error_message or 'an unknown error occurred during processing'
+                        logger.error(f"Job {job_id} 'error': {error_message_to_post}. Attempting error reply to tweet {original_tweet_id} (Attempt {reply_attempts_in_session + 1}/{MAX_REPLY_ATTEMPTS_PER_SESSION}).")
+                        reply_text_error = f"Sorry, I couldn't generate the explanation for '{topic}' by {persona_name}. Error: {error_message_to_post}"
+                        response = twitter_client.post_reply(original_tweet_id, reply_text_error)
+                        if response:
+                            reply_posted_successfully = True
+                        reply_action_taken = True
+
+                    # After attempting to reply (successfully or not), mark it in the cache for this session.
+                    if reply_action_taken:
+                        with jobs_cache_lock:
+                            if job_id in active_jobs_cache:
+                                if reply_posted_successfully:
+                                    active_jobs_cache[job_id]["reply_attempted_this_session"] = True
+                                    logger.info(f"Successfully posted reply for job {job_id}. Marked as reply_attempted_this_session=True.")
+                                else: # post_reply failed despite its internal retries
+                                    active_jobs_cache[job_id]["reply_attempts_in_session"] = reply_attempts_in_session + 1
+                                    logger.warning(f"Failed to post reply for job {job_id} via twitter_client.post_reply. Attempt count now {active_jobs_cache[job_id]['reply_attempts_in_session']}.")
+                                    if active_jobs_cache[job_id]["reply_attempts_in_session"] >= MAX_REPLY_ATTEMPTS_PER_SESSION:
+                                        active_jobs_cache[job_id]["reply_attempted_this_session"] = True # Stop trying this session
+                                        logger.error(f"Job {job_id} reached max reply attempts for this session. Marking reply_attempted_this_session=True.")
+                                # Consider removing from cache if truly done: del active_jobs_cache[job_id]
+                                # Or, for more robust multi-instance handling, update DB to a final "replied_to_twitter" status here.
+
+                except Exception as e_reply:
+                    logger.error(f"Error during reply processing for job {job_id} (Tweet: {original_tweet_id}): {e_reply}", exc_info=True)
+                    # Do not set reply_attempted_this_session to True if the attempt itself failed, to allow retry.
+                    # However, if post_reply itself has retries, this might lead to multiple replies.
+                    # For now, if an exception occurs here, it implies the twitter_client.post_reply failed, 
+                    # so we DON'T mark reply_attempted_this_session as True, allowing a retry in the next cycle.
+                    pass # Error already logged
+
+        except Exception as e_outer:
+            logger.error(f"Outer error in poll_job_statuses loop: {e_outer}", exc_info=True)
         
-        # 4. Sleep for a configured interval
+        # Sleep for a configured interval
         poll_interval = int(os.getenv("JOB_POLL_INTERVAL_SECONDS", 30))
-        # logger.info(f"Polling complete. Sleeping for {poll_interval} seconds.")
         time.sleep(poll_interval)
-    pass # End of poll_job_statuses
+    # pass # End of poll_job_statuses -> This pass is not needed due to while True
 
 # --- Main Bot Execution (Example) ---
 if __name__ == '__main__':
