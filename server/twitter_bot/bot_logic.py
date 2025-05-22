@@ -261,12 +261,30 @@ def poll_job_statuses():
                         logger.info(f"Job {job_id} 'completed'. Attempting reply for topic '{topic}' by {persona_name} to tweet {original_tweet_id} (Attempt {reply_attempts_in_session + 1}/{MAX_REPLY_ATTEMPTS_PER_SESSION}).")
                         reply_text_success = f"Here's {persona_name} explaining '{topic}'!"
 
-                        if video_url:
-                            logger.info(f"Video for job {job_id} is at remote URL: {video_url}. Posting link.")
-                            response = twitter_client.post_reply(original_tweet_id, f"{reply_text_success} Watch it here: {video_url}")
+                        # Construct local path to the generated video file
+                        job_result_dir = os.path.join(RESULTS_BASE_DIR, job_id)
+                        video_file_path = os.path.join(job_result_dir, "final_video.mp4")
+                        
+                        # Check if the video file exists locally
+                        if os.path.exists(video_file_path):
+                            logger.info(f"Found local video file for job {job_id} at: {video_file_path}. Uploading to Twitter.")
+                            try:
+                                # Attempt to upload the video and get a media_id
+                                media_id = twitter_client.upload_video(video_file_path)
+                                if media_id:
+                                    # Post reply with the uploaded video
+                                    logger.info(f"Video for job {job_id} successfully uploaded to Twitter. Media ID: {media_id}")
+                                    response = twitter_client.post_reply(original_tweet_id, reply_text_success, media_id)
+                                else:
+                                    logger.error(f"Failed to upload video for job {job_id} to Twitter. No media_id returned.")
+                                    response = twitter_client.post_reply(original_tweet_id, f"Sorry, I finished processing '{topic}' by {persona_name}, but there was an issue uploading the video to Twitter.")
+                            except Exception as e:
+                                logger.error(f"Error uploading video for job {job_id} to Twitter: {e}", exc_info=True)
+                                response = twitter_client.post_reply(original_tweet_id, f"Sorry, I finished processing '{topic}' by {persona_name}, but encountered an error when uploading the video to Twitter.")
                         else:
-                            logger.error(f"Job {job_id} completed but no video_url (result_url) found in DB. Cannot post video link.")
-                            response = twitter_client.post_reply(original_tweet_id, f"Sorry, I finished processing '{topic}' by {persona_name}, but there was an issue retrieving the video link.")
+                            # Neither local file nor URL is available
+                            logger.error(f"Job {job_id} completed but neither local video file at {video_file_path} nor video_url found. Cannot post video.")
+                            response = twitter_client.post_reply(original_tweet_id, f"Sorry, I finished processing '{topic}' by {persona_name}, but there was an issue retrieving the video.")
                         
                         if response: # twitter_client.post_reply returns a response object on success
                             reply_posted_successfully = True
