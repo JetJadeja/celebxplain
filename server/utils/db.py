@@ -48,7 +48,8 @@ def init_db():
             result_url TEXT,
             error TEXT,
             original_tweet_id TEXT DEFAULT NULL,
-            original_tweet_author_id TEXT DEFAULT NULL
+            original_tweet_author_id TEXT DEFAULT NULL,
+            reply_posted BOOLEAN DEFAULT 0
         )
         ''')
         
@@ -75,6 +76,10 @@ def init_db():
         if 'original_tweet_author_id' not in columns:
             cursor.execute('ALTER TABLE jobs ADD COLUMN original_tweet_author_id TEXT DEFAULT NULL')
             logger.info("Added 'original_tweet_author_id' column to jobs table.")
+            
+        if 'reply_posted' not in columns:
+            cursor.execute('ALTER TABLE jobs ADD COLUMN reply_posted BOOLEAN DEFAULT 0')
+            logger.info("Added 'reply_posted' column to jobs table.")
 
         conn.commit()
     # conn.close() # No longer needed here, finally block in get_db_connection handles it
@@ -90,7 +95,7 @@ def create_job(job_id, persona_id, query, original_tweet_id=None, original_tweet
         now = datetime.datetime.now().isoformat()
         
         cursor.execute(
-            'INSERT INTO jobs (id, persona_id, query, status, created_at, original_tweet_id, original_tweet_author_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO jobs (id, persona_id, query, status, created_at, original_tweet_id, original_tweet_author_id, reply_posted) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
             (job_id, persona_id, query, 'created', now, original_tweet_id, original_tweet_author_id)
         )
         
@@ -164,17 +169,52 @@ def get_job_updates(job_id):
 
 def get_pending_twitter_replies():
     """Fetches jobs that originated from Twitter and are in 'completed' or 'error' status, 
-       meaning they are ready for a reply to be posted back to Twitter.
+       and haven't had a reply posted yet.
     """
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, original_tweet_id, status, result_url, error, persona_id, query 
             FROM jobs 
-            WHERE original_tweet_id IS NOT NULL AND (status = 'completed' OR status = 'error')
+            WHERE original_tweet_id IS NOT NULL 
+            AND (status = 'completed' OR status = 'error')
+            AND reply_posted = 0
         """)
         jobs_for_reply = cursor.fetchall() # Returns list of Row objects
     
     if jobs_for_reply:
         return [dict(job) for job in jobs_for_reply]
     return [] # Return an empty list if no jobs found
+
+def get_job_by_tweet_id(tweet_id):
+    """
+    Retrieves a job from the database based on the original_tweet_id.
+    This is used to check if a job already exists for a given tweet, preventing duplicate job creation.
+    
+    Args:
+        tweet_id: The ID of the tweet to check for existing jobs
+        
+    Returns:
+        A dictionary with job data if found, or None if no job exists for this tweet ID
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM jobs WHERE original_tweet_id = ? LIMIT 1
+        """, (tweet_id,))
+        job = cursor.fetchone()
+    
+    if job:
+        return dict(job)
+    return None
+
+def mark_job_reply_posted(job_id):
+    """Mark a job as having had a reply posted to Twitter"""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            'UPDATE jobs SET reply_posted = 1 WHERE id = ?',
+            (job_id,)
+        )
+        conn.commit()
+        return cursor.rowcount > 0

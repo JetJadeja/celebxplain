@@ -180,6 +180,32 @@ def _write_since_id(since_id: int) -> None:
     except Exception as e:
         logger.error(f"Unexpected error writing since_id {since_id} to {SINCE_ID_FILE}: {e}", exc_info=True)
 
+def update_since_id_after_reply(original_tweet_id: str) -> None:
+    """
+    Updates the since_id file with the ID of the original tweet that was replied to.
+    This ensures we don't reprocess tweets we've already replied to.
+    
+    Args:
+        original_tweet_id: The ID of the tweet the bot replied to (not the bot's reply ID)
+    """
+    try:
+        # Convert to int for proper comparison
+        tweet_id_int = int(original_tweet_id)
+        
+        # Read current since_id to see if this is newer
+        current_since_id = _read_since_id()
+        
+        # Only update if this ID is newer (higher) than the current since_id
+        if current_since_id is None or tweet_id_int > current_since_id:
+            logger.info(f"Updating since_id to {tweet_id_int} after successfully replying to tweet")
+            _write_since_id(tweet_id_int)
+        else:
+            logger.debug(f"Not updating since_id after reply - current ID {current_since_id} is newer than {tweet_id_int}")
+    except (ValueError, TypeError) as e:
+        logger.error(f"Error converting tweet ID {original_tweet_id} to int: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error updating since_id after reply: {e}", exc_info=True)
+
 def listen_for_mentions(callback_on_mention: Callable):
     """
     Periodically polls for new mentions to the bot's authenticated user using Twitter API v2.
@@ -385,6 +411,8 @@ def post_reply(tweet_id: str, text: str, media_id: Optional[str] = None) -> Opti
             
             if response.data and response.data.get("id"):
                 logger.info(f"Successfully posted reply. New Tweet ID: {response.data['id']} in reply to {tweet_id} on attempt {attempt + 1}.")
+                # Update since_id with the original tweet ID after successfully replying
+                update_since_id_after_reply(tweet_id)
                 return response
             else:
                 # This case might indicate a non-exception failure from Twitter, or unexpected response structure

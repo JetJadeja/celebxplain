@@ -14,7 +14,9 @@ from utils.db import (
     get_job as db_get_job_direct, 
     update_job_status as db_update_job_status_direct,
     # get_db_connection, # No longer directly used here
-    get_pending_twitter_replies # Import the new helper function
+    get_pending_twitter_replies, # Import the new helper function
+    get_job_by_tweet_id, # New import to check for existing jobs
+    mark_job_reply_posted # New import for marking jobs as replied
 )
 from celery_app import celery_app as celery_app_direct
 
@@ -83,14 +85,14 @@ def handle_mention(tweet):
 
     # 1. Get tweet text (the tweet object from stream usually has .text)
     tweet_text = tweet.text 
-    # If for some reason text isn't directly available or you need to re-fetch for full text:
-    # if not tweet_text:
-    #     logger.info(f"Tweet text not directly in payload for {tweet.id}, attempting to fetch.")
-    #     tweet_text = twitter_client.get_tweet_text(tweet.id)
-    #     if not tweet_text:
-    #         logger.error(f"Failed to fetch text for tweet {tweet.id}. Aborting.")
-    #         twitter_client.post_reply(tweet.id, "Sorry, I couldn't retrieve the text of your tweet.")
-    #         return
+    
+    # First, check if we already have a job for this tweet ID to prevent duplicates on restart
+    existing_job = get_job_by_tweet_id(str(tweet.id))
+    if existing_job:
+        logger.info(f"Job already exists for Tweet ID {tweet.id}: Job ID {existing_job['id']}, Status: {existing_job['status']}. Skipping job creation.")
+        # Update since_id here to mark this tweet as processed, even though we're not creating a new job
+        twitter_client.update_since_id_after_reply(str(tweet.id))
+        return
 
     # 2. Parse the tweet to get topic, persona_id, and any error
     # Ensure loaded_personas_data is available
@@ -288,6 +290,9 @@ def poll_job_statuses():
                         
                         if response: # twitter_client.post_reply returns a response object on success
                             reply_posted_successfully = True
+                            # Mark this job as replied in the database
+                            mark_job_reply_posted(job_id)
+                            logger.info(f"Job {job_id} marked as replied in the database")
                         reply_action_taken = True
 
                     elif db_status == 'error':
@@ -297,6 +302,9 @@ def poll_job_statuses():
                         response = twitter_client.post_reply(original_tweet_id, reply_text_error)
                         if response:
                             reply_posted_successfully = True
+                            # Mark this job as replied in the database
+                            mark_job_reply_posted(job_id)
+                            logger.info(f"Job {job_id} marked as replied in the database")
                         reply_action_taken = True
 
                     # After attempting to reply (successfully or not), mark it in the cache for this session.
