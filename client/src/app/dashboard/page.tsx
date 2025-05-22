@@ -189,12 +189,12 @@ export default function DashboardPage() {
             <Brain size={36} className="text-purple-300" />
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 pb-2">
-            AI Oracle Studio
+            Spew: Celebrity Meme Learning Studio
           </h1>
           <p className="text-lg text-slate-400 max-w-xl mx-auto">
-            Craft engaging video explanations with your favorite AI personas.
-            It's simple: Pick a persona, enter your topic, and let the AI work
-            its magic.
+            Craft ridiculously entertaining (but somehow educational) videos
+            with your favorite AI personas. It's simple: Pick a persona, enter
+            your topic, and let the AI work its magic.
           </p>
         </header>
 
@@ -382,15 +382,13 @@ export default function DashboardPage() {
 
         {isSubmitting && (
           <p className="text-center text-slate-500 mt-6 text-sm">
-            Oracle is thinking... This may take a few moments.
+            Spew is thinking... This may take a few moments.
           </p>
         )}
 
         {/* Simplified Footer */}
         <footer className="text-center pt-12 pb-6 text-slate-600 text-xs">
-          <p>
-            &copy; {new Date().getFullYear()} Oracle AI. All Rights Reserved.
-          </p>
+          <p>&copy; {new Date().getFullYear()} Spew AI. All Rights Reserved.</p>
         </footer>
       </div>
     </div>

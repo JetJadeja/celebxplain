@@ -8,44 +8,34 @@ import Image from "next/image";
 
 const PLACEHOLDER_IMAGES = [
   {
-    src: "https://picsum.photos/seed/carousel1/600/400",
-    alt: "Placeholder Image 1",
-    title: "Inspirational Ideas",
+    src: "https://edm.com/.image/ar_16:9%2Cc_fill%2Ccs_srgb%2Cg_xy_center%2Cq_auto:good%2Cw_768%2Cx_1200%2Cy_491/MTg2MDAwODk4ODUyMzk4MjA5/shaquille-oneal-dj-diesel-full-send-podcast-nelk-boys.png",
+    alt: "Shaquille O'Neal DJ Diesel",
+    title: "Mathematics",
   },
   {
-    src: "https://picsum.photos/seed/carousel2/600/400",
-    alt: "Placeholder Image 2",
-    title: "Creative Concepts",
+    src: "https://cloudfront-us-east-1.images.arcpublishing.com/dmn/UXWAHKCZEBGCBOFJBW5AC4V3NA.png",
+    alt: "Joe Rogan teaches physics",
+    title: "History",
   },
   {
-    src: "https://picsum.photos/seed/carousel3/600/400",
-    alt: "Placeholder Image 3",
-    title: "Educational Insights",
+    src: "https://i.ytimg.com/vi/DhU6c6NIu1c/maxresdefault.jpg",
+    alt: "Ice Spice teaches engineering",
+    title: "Engineering",
   },
   {
-    src: "https://picsum.photos/seed/carousel4/600/400",
-    alt: "Placeholder Image 4",
-    title: "Personal Messages",
+    src: "https://mediaproxy.salon.com/width/1200/https://media2.salon.com/2014/01/wolf_wall_street2.jpg",
+    alt: "Wolf of Wall Street",
+    title: "Business",
   },
   {
-    src: "https://picsum.photos/seed/carousel5/600/400",
-    alt: "Placeholder Image 5",
-    title: "Expert Explanations",
+    src: "https://media.cnn.com/api/v1/images/stellar/prod/221025160423-taylor-swift-jimmy-fallon.jpg?c=original",
+    alt: "Taylor Swift Jimmy Fallon",
+    title: "Negotiation",
   },
   {
-    src: "https://picsum.photos/seed/carousel6/600/400",
-    alt: "Placeholder Image 6",
-    title: "Fun Facts",
-  },
-  {
-    src: "https://picsum.photos/seed/carousel7/600/400",
-    alt: "Placeholder Image 7",
-    title: "Quick Tutorials",
-  },
-  {
-    src: "https://picsum.photos/seed/carousel8/600/400",
-    alt: "Placeholder Image 8",
-    title: "Daily Wisdom",
+    src: "https://images.cdn.prd.api.discomax.com/2023/02/17/ffd87025-dabb-389f-999c-457780b2b4ee.jpeg?f=jpg&q=75&w=1280",
+    alt: "Donald Trump",
+    title: "Software",
   },
 ];
 

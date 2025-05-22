@@ -12,7 +12,7 @@ export default function LandingPage() {
       <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Brain className="h-8 w-8 text-purple-400" />
-          <h1 className="text-2xl font-bold tracking-tight">Oracle</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Spew</h1>
         </div>
         <nav className="space-x-4">
           <Link href="/dashboard">
@@ -28,19 +28,17 @@ export default function LandingPage() {
         <div className="max-w-3xl">
           <div className="inline-flex items-center justify-center bg-purple-500/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
             <Zap className="h-4 w-4 mr-2" />
-            Unlock a New Way of Learning
+            Unlock a Ridiculously Fun Way of Learning
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-            Learn Anything, <br />
-            Explained by Your{" "}
+            The Most Absurd Way to <br />
             <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
-              Favorite Stars
+              Actually Learn Stuff
             </span>
-            .
           </h2>
           <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
             Ever wished learning complex topics was as entertaining as watching
-            your favorite celebrity? Now it can be. Oracle uses AI to generate
+            your favorite celebrity? Now it can be. Spew uses AI to generate
             unique video explanations in the style of well-known personalities.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
@@ -77,7 +75,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Why You'll Love Oracle
+              Why You'll Love Spew
             </h3>
             <p className="text-lg text-slate-400 max-w-2xl mx-auto">
               Discover the features that make learning engaging and fun.
@@ -188,10 +186,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Brain className="h-6 w-6 text-purple-400" />
-            <h1 className="text-xl font-bold">Oracle</h1>
+            <h1 className="text-xl font-bold">Spew</h1>
           </div>
           <p className="text-sm">
-            &copy; {new Date().getFullYear()} Oracle. All rights reserved.
+            &copy; {new Date().getFullYear()} Spew. All rights reserved.
             Transforming education, one celebrity at a time.
           </p>
         </div>

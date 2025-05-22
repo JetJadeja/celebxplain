@@ -15,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Celebrity Explainer Generator",
-  description: "Learn anything, explained by your favorite celebrities",
+  title: "Spew: Meme Learning from Celebs",
+  description:
+    "Learn anything, explained by your favorite celebrities in the most absurdly entertaining way",
 };
 
 export default function RootLayout({
