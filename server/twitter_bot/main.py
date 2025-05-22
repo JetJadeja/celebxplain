@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__) # Use __name__ for the logger of this speci
 # Set higher level logging for noisy libraries if needed, e.g.:
 # logging.getLogger('tweepy').setLevel(logging.WARNING)
 
+import time
+time.sleep(20)
+
 def main():
     logger.info("Starting CelebXplain Twitter Bot...")
 
