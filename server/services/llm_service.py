@@ -42,9 +42,10 @@ def generate_explanation(persona_id, query):
         messages=[
             {"role": "system", "content": "You are a brilliant writer who is capable of writing in the style of any person or celebrity. You are given a query and a style prompt. You need to write an explanation of the query in the style of the celebrity."},
             {"role": "user", "content": f"""
-                I want you to write a speech in the style of {name}. It should be about 30-50 seconds long, with a hard cap of 60 seconds.
+                I want you to write a speech in the style of {name}. It should be about 30 seconds long, with a hard cap of 40 seconds.
                 I want you to explain the following in great detail: {query}
                 Speak in the following style: {style}. Overall, it's incredibly important to really dive deep into explaining the concepts at a low level. You are a brilliant teacher, so don't hold back.
+                Remember, this script shouldn't be too long, it should be about 30 seconds long, with a hard cap of 40 seconds.
             """}
         ]
     )
